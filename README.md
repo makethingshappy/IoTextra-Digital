@@ -2,110 +2,118 @@
 
 ## Overview
 
-**IoTextra-Digital** is a family of isolated digital I/O modules designed for reliable use in IoT, IIoT, and smart home environments.  
-The modules provide robust 24 V digital inputs and relay / solid-state relay outputs suitable for PLC-style panels, field wiring, and edge devices such as Raspberry Pi, Arduino-compatible boards, and IoTsmart.
+**IoTextra-Digital** is a family of isolated digital I/O modules designed for reliable operation in IoT, IIoT, and smart home environments.  
+The modules support **36 VDC–tolerant** digital inputs and robust relay or solid-state relay outputs suitable for PLC-style panels and field wiring.
 
-These boards are intended to be used together with MQTT and Node-RED automation flows (for example via the [IoTflow](https://github.com/makethingshappy/IoTflow) project), but remain simple, standalone hardware modules that can be wired into any digital I/O control system.
+IoTextra modules integrate cleanly with IoTsmart MCU boards and can be used with MQTT and Node-RED workflows (e.g., via the IoTflow automation framework).
+
+---
 
 ## Features & Capabilities
 
-- Isolated industrial digital I/O suitable for 24 V field wiring  
-- Compatible with common single-board computers and microcontroller platforms  
-- Opto-isolated inputs and relay / SSR outputs for improved safety and noise immunity  
-- DIN-rail friendly form factor (on supported modules)  
-- Clearly labeled terminal blocks for fast wiring and maintenance  
-- Designed for long-term reliability in hobby, lab and light industrial environments  
+- Industrial-style digital I/O with **36 VDC** tolerant inputs  
+- Opto-isolated inputs and relay/SSR outputs for improved noise immunity  
+- Clean terminal block layout for fast, error-free wiring  
+- Compatible with IoTsmart modules, Raspberry Pi PICO, and other MCUs  
+- Suitable for long-term installations in smart buildings, labs, and light industrial systems  
 
-> **Note:** Please refer to the module-specific documentation in each `/v3.02/` folder for exact ratings, pinouts and dimensions.
+---
 
 ## Hardware Specifications
 
-The exact specifications (number of channels, maximum current, voltage limits, isolation ratings, etc.) depend on the selected IoTextra-Digital module.
+Each IoTextra-Digital module has its own electrical and mechanical specifications, documented inside its versioned folder.
 
-Typical parameters documented per module include:
+Typical specifications include:
 
-- Supply voltage range  
-- Input voltage thresholds  
-- Output type (mechanical relay / solid-state relay / digital input)  
-- Maximum load current and voltage  
-- Isolation and protection features  
+- Maximum input voltage: **36 VDC**  
+- Relay or SSR output ratings  
+- Electrical thresholds and isolation design  
+- Load and protection characteristics  
+- Mechanical layout and terminal labeling  
 
-See the hardware documentation in:
+Module folders:
 
 - `Input/v3.02/`  
-- `Octal2/v3.02/`  
 - `Relay2/v3.02/`  
-- `SSR Small/v3.02/`
+- `SSR Small/v3.02/`  
+- `Octal2/v3.02/`  
 
-for detailed per-board specifications.
+Refer to each module’s documentation for exact technical data.
+
+---
 
 ## Digital I/O Channel Configuration
 
-Each IoTextra-Digital module provides a fixed set of digital input and/or output channels.  
-The channel mapping, default states and wiring examples are described in the module-level documentation.
+Channel mapping and wiring details are provided per module.
 
-Typical information includes:
+Documentation includes:
 
-- Channel numbering and terminal labeling  
-- Which terminals correspond to inputs vs. outputs  
-- Shared commons / reference lines  
-- Example wiring for switches, sensors and loads  
+- Input and output channel numbering  
+- Terminal block identification  
+- Wiring patterns for switches, sensors, and loads  
+- Recommended safety and polarity guidelines  
 
-Refer to the relevant `README.md` or datasheet inside each `/v3.02/` folder for full channel details.
+> **Important:**  
+> NPN transistor outputs apply **only to the IoTextra Octal2 module**.  
+> All other IoTextra modules use relays or solid-state relays.
+
+---
 
 ## Wiring & Pinout Diagrams
 
-Wiring and pinout information is provided per module, including:
+Module-level wiring diagrams include:
 
 - Terminal block layout  
-- Signal names and polarity  
-- Recommended wire types and gauges  
-- Safety notes for higher-voltage loads on relay / SSR outputs  
+- Polarity and signal direction  
+- Relay/SSR load wiring examples  
+- Safety considerations for higher-voltage operation  
 
-Please consult the diagrams and images in:
+See the diagrams located in:
 
 - `Input/v3.02/`  
-- `Octal2/v3.02/`  
 - `Relay2/v3.02/`  
-- `SSR Small/v3.02/`
+- `SSR Small/v3.02/`  
+- `Octal2/v3.02/`
 
-before connecting the module to field wiring or loads.
+---
 
 ## Software Support
 
-While IoTextra-Digital is purely a hardware family, it is designed to integrate cleanly with MQTT-based and Node-RED-based automation stacks.
+IoTextra-Digital is a **hardware-only** series, but integrates cleanly into automation stacks:
 
-Typical usage patterns include:
+Typical usage includes:
 
-- Connecting the module to a Raspberry Pi, IoTsmart board or similar device  
-- Exposing the digital I/O through GPIO, I²C, SPI or other supported interfaces on the host  
-- Publishing and subscribing to MQTT topics from Node-RED or other workflow tools
+- Connecting module inputs/outputs to IoTsmart or Raspberry Pi PICO boards  
+- Reading/writing digital I/O via GPIO or MCU firmware  
+- Triggering MQTT events or Node-RED flows  
+- Following IoTflow’s MQTT topic conventions for automation
 
-To accelerate development:
+### Examples
 
-- See the code and flow **examples** in the `/examples/` folder of the relevant software repositories (for example, [IoTflow](https://github.com/makethingshappy/IoTflow)).  
-- Use IoTflow’s Node-RED flows and MQTT topic conventions as a reference when integrating IoTextra-Digital modules into your own projects.
+An `/examples/` folder is included, providing usage examples for common digital input/output workflows.
 
-> This repository does **not** contain firmware or full software stacks – it documents the hardware used by those tools.
+---
 
-## SKU Table / Ordering Options
+## Ordering Information
 
-The IoTextra-Digital series currently includes the following modules:
+For SKUs, part numbers, and module-specific ordering details,  
+please refer to the individual module folders:
 
-| Module Name        | Type                        | Typical Use Case                                      |
-|--------------------|-----------------------------|-------------------------------------------------------|
-| **IoTextra Input** | Digital input module        | Reading industrial switches, sensors and 24 V signals |
-| **IoTextra Relay2** | Relay output module        | Switching AC/DC loads via mechanical relays           |
-| **IoTextra SSR Small** | Solid-state relay module | Quiet, fast switching of low-to-medium power loads    |
-| **IoTextra Octal2** | Multi-channel I/O module   | Compact, multi-channel digital control                |
+- `Input/`  
+- `Relay2/`  
+- `SSR Small/`  
+- `Octal2/`  
 
-For detailed mechanical drawings, ratings and part numbers, please refer to the datasheets inside each module’s `/v3.02/` folder.
+Each folder contains its own ordering notes and datasheets.
+
+---
 
 ## Licensing
 
-This repository uses separate licenses for different asset types:
+This repository uses separate licenses for each category of assets:
 
-- **Code:** [`LICENSE_CODE.md`](./LICENSE_CODE.md) – MIT License  
-- **Hardware design files & schematics:** [`LICENSE_HARDWARE.md`](./LICENSE_HARDWARE.md) – CC BY-SA 4.0  
+- **Code:** [`LICENSE_CODE.md`](./LICENSE_CODE.md) — MIT License  
+- **Schematics & Documentation:** [`LICENSE_HARDWARE.md`](./LICENSE_HARDWARE.md) — CC BY-SA 4.0  
 - **Documentation:** [`LICENSE_DOCS.md`](./LICENSE_DOCS.md)  
-- **Media assets:** [`LICENSE_MEDIA.md`](./LICENSE_MEDIA.md)
+- **Media:** [`LICENSE_MEDIA.md`](./LICENSE_MEDIA.md)
+
