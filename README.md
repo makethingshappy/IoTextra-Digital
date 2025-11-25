@@ -1,155 +1,139 @@
-# IoTextra-Digital  
-Industrial Digital I/O Modules for MQTT, IoTsmart & Node-RED Automation
+# IoTextra-Digital: Industrial Digital I/O Modules for MQTT & Node-RED Automation
 
-**IoTextra-Digital** is a family of isolated industrial digital I/O modules designed for reliable operation in IoT, IIoT, automation, and smart building environments.  
-The modules support **36 VDC–tolerant digital inputs**, relay or SSR outputs, and clean integration with **IoTsmart MCU boards**, **MQTT**, and **Node-RED** through the IoTflow ecosystem.
+## Overview
 
-IoTextra-Digital is part of the wider **IoTextra Ecosystem**, including:
+**IoTextra-Digital** is a family of isolated digital I/O modules designed for reliable operation in IoT, IIoT, and smart home environments.  
+The modules support **36 VDC–tolerant** digital inputs and robust relay or solid-state relay outputs suitable for PLC-style panels and field wiring.
 
-- **IoTextra-Digital** – Digital I/O  
-- **IoTextra-Analog** – Analog modules  
-- **IoTextra-Combo** – Mixed-signal modules  
-- **IoTsmart** – RP2040 / ESP32-S3 / RP2350A MCU boards  
-- **IoTflow** – MQTT + Node-RED automation framework  
+IoTextra modules integrate cleanly with IoTsmart MCU boards and can be used with MQTT and Node-RED workflows (e.g., via the IoTflow automation framework).
 
 ---
 
-## 📦 Module Index
+## Features & Capabilities
 
-Each module includes versioned documentation (datasheet, schematic), media, and examples.
-
-| Module | Channels | Output Type | Folder |
-|--------|----------|-------------|--------|
-| **Input** | 1–8 Inputs | Isolated Digital Inputs | [Input/v3.02](./Input/v3.02/) |
-| **Relay2** | 2 Outputs | Relay Outputs | [Relay2/v3.02](./Relay2/v3.02/) |
-| **SSR Small** | 1 Output | Solid-State Relay | [SSR Small/v3.02](./SSR%20Small/v3.02/) |
-| **Octal2** | 8 Outputs | NPN Transistor Outputs | [Octal2/v3.02](./Octal2/v3.02/) |
+- Industrial-style digital I/O with **36 VDC** tolerant inputs  
+- Opto-isolated inputs and relay/SSR outputs for improved noise immunity  
+- Clean terminal block layout for fast, error-free wiring  
+- Compatible with IoTsmart modules, Raspberry Pi PICO, and other MCUs  
+- Suitable for long-term installations in smart buildings, labs, and light industrial systems  
 
 ---
 
-## 🔧 Key Features
+## Hardware Specifications
 
-- **36 VDC tolerant** digital inputs  
-- Opto-isolation for clean, noise-resistant signal integrity  
-- Relay, SSR, or NPN transistor outputs depending on module  
-- Screw-terminal field wiring for fast and reliable installation  
-- Designed for industrial, lab, and automation environments  
-- Fully compatible with **IoTsmart RP2040 / RP2350A / ESP32-S3** MCU boards  
-- Works with **MQTT** and **Node-RED** (via IoTflow)
+Each IoTextra-Digital module has its own electrical and mechanical specifications, documented inside its versioned folder.
 
----
+Module folders:
 
-## 🛠 Hardware Documentation
+- **[Input/v.3.02](./Input/v.3.02/)**  
+- **[Relay2/v3.02](./Relay2/v3.02/)**  
+- **[SSR Small/v.3.02](./SSR%20Small/v.3.02/)**  
+- **[Octal2/v.3.02](./Octal2/v.3.02/)**  
 
-Each module folder includes:
+Typical documentation includes:
 
-- **/docs** – Datasheet (PDF)  
-- **/hardware** – Schematic (PDF)  
-- **/media** – 3D views, PCB images, host-board diagrams  
-- **/examples** – Python / MicroPython GPIO examples  
+- Maximum input voltage: **36 VDC**  
+- Relay or SSR output ratings  
+- Electrical thresholds and isolation design  
+- Load and protection characteristics  
+- Mechanical layout and terminal labeling  
 
-Quick navigation:
-
-- **Input** → [Input/v3.02](./Input/v3.02/)  
-- **Relay2** → [Relay2/v3.02](./Relay2/v3.02/)  
-- **SSR Small** → [SSR Small/v3.02](./SSR%20Small/v3.02/)  
-- **Octal2** → [Octal2/v3.02](./Octal2/v3.02/)  
+Refer to each module’s documentation for exact technical data.
 
 ---
 
-## 🔌 Digital I/O Behavior
+## Digital I/O Channel Configuration
 
-### **Input Module**
-- Opto-isolated digital inputs  
-- 36 VDC tolerant  
-- Suitable for switches, sensors, PLC outputs  
+Channel mapping and wiring details are provided per module.
 
-### **Relay-Based Modules (Relay2 / SSR Small)**
-- Fully isolated load side  
-- Clean relay or SSR actuation  
-- Ideal for building automation and low-current switching  
+Documentation includes:
 
-### **Octal2 Module**
-⚠ **NPN transistor outputs apply ONLY to the Octal2 module.**  
-All other modules use relays or solid-state relays.
+- Input and output channel numbering  
+- Terminal block identification  
+- Wiring patterns for switches, sensors, and loads  
+- Recommended safety and polarity guidelines  
 
----
-
-## 🧰 Wiring & Pinout Resources
-
-Module folders include:
-
-- Terminal layouts  
-- Channel numbering  
-- Mechanical diagrams  
-- MCU pairing images  
-- Load wiring examples  
-
-Located in:
-
-- `Input/v3.02/media/`  
-- `Relay2/v3.02/media/`  
-- `SSR Small/v3.02/media/`  
-- `Octal2/v3.02/media/`
+> **Important:**  
+> NPN transistor outputs apply **only to the IoTextra Octal2 module**.  
+> All other IoTextra modules use relays or solid-state relays.
 
 ---
 
-## 🧑‍💻 Software Support
+## Wiring & Pinout Diagrams
 
-IoTextra-Digital is a **hardware-focused** series but integrates seamlessly with MCU firmware and automation platforms.
+Module-level wiring diagrams include:
 
-### ✔ With IoTsmart MCU Boards  
-Use standard GPIO libraries on:
+- Terminal block layout  
+- Polarity and signal direction  
+- Relay/SSR load wiring examples  
+- Safety considerations for higher-voltage operation  
 
-- RP2040  
-- RP2350A  
-- ESP32-S3  
+See the diagrams located in:
 
-Host pairing images are included in each module’s `/media` folder.
-
-### ✔ With IoTflow (MQTT + Node-RED)  
-IoTextra modules are compatible with:
-
-- **IoTflow Kernel**  
-- **IoTflow Forge** (configuration → JSON tools)  
-- **node-red-contrib-iotextra**
-
-IoTflow repository:  
-https://github.com/makethingshappy/IoTflow
-
-### ✔ Example Code  
-Each module’s `/examples/` folder includes:
-
-- Digital input reading  
-- Relay / SSR output control  
-- Automation workflows for Node-RED and MQTT
+- **[Input/v.3.02](./Input/v.3.02/)**  
+- **[Relay2/v3.02](./Relay2/v3.02/)**  
+- **[SSR Small/v.3.02](./SSR%20Small/v.3.02/)**  
+- **[Octal2/v.3.02](./Octal2/v.3.02/)**  
 
 ---
 
-## 🛒 Ordering Information
+## Software Support
 
-Each module folder contains:
+IoTextra-Digital is a **hardware-only** series, but integrates cleanly into automation stacks.
 
-- SKU / part numbers  
-- Ordering details  
-- Supported MCU hosts  
-- Mechanical specifications  
+Typical usage includes:
 
-Navigate to:
-
-- `/Input/`  
-- `/Relay2/`  
-- `/SSR Small/`  
-- `/Octal2/`
+- Connecting module inputs/outputs to IoTsmart or Raspberry Pi PICO boards  
+- Reading/writing digital I/O via GPIO or MCU firmware  
+- Triggering MQTT events or Node-RED flows  
+- Following IoTflow’s MQTT topic conventions for automation
 
 ---
 
-## 📜 Licensing
+## Examples
 
-Separate licenses apply depending on asset type:
+IoTextra-Digital modules are used together with IoTsmart MCU boards and IoTflow-based automation.
 
-- **Code** → [LICENSE_CODE.md](./LICENSE_CODE.md)  
-- **Schematics & Hardware Docs** → [LICENSE_HARDWARE.md](./LICENSE_HARDWARE.md) (CC BY-SA 4.0)  
-- **Documentation** → [LICENSE_DOCS.md](./LICENSE_DOCS.md)  
-- **Media** → [LICENSE_MEDIA.md](./LICENSE_MEDIA.md)  
+Module-specific diagrams and connection examples are included inside each module’s folder:
 
+- **[Input/v.3.02](./Input/v.3.02/)**  
+- **[Relay2/v3.02](./Relay2/v3.02/)**  
+- **[SSR Small/v.3.02](./SSR%20Small/v.3.02/)**  
+- **[Octal2/v.3.02](./Octal2/v.3.02/)**  
+
+### MCU Firmware Examples (IoTsmart)
+
+IoTsmart does **not** yet contain its own `/examples` folder.  
+Firmware reference examples will be added in a future update by the development team.
+
+### Node-RED Automation Examples (IoTflow)
+
+For complete MQTT + Node-RED automation examples, see:
+
+👉 **IoTflow Node-RED Examples**  
+https://github.com/makethingshappy/IoTflow/tree/main/Node-RED%20Examples
+
+---
+
+## Ordering Information
+
+For SKUs, part numbers, and module-specific ordering details,  
+refer to the individual module folders:
+
+- **[Input](./Input/)**  
+- **[Relay2](./Relay2/)**  
+- **[SSR Small](./SSR%20Small/)**  
+- **[Octal2](./Octal2/)**  
+
+Each folder includes ordering notes and documentation.
+
+---
+
+## Licensing
+
+This repository uses separate licenses for each category of assets:
+
+- **Code:** [`LICENSE_CODE.md`](./LICENSE_CODE.md) — MIT License  
+- **Schematics & Documentation:** [`LICENSE_HARDWARE.md`](./LICENSE_HARDWARE.md) — CC BY-SA 4.0  
+- **Documentation:** [`LICENSE_DOCS.md`](./LICENSE_DOCS.md)  
+- **Media:** [`LICENSE_MEDIA.md`](./LICENSE_MEDIA.md)
