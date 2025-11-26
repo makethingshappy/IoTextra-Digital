@@ -44,8 +44,6 @@ Refer to each module’s documentation for exact technical data.
 
 ## Digital I/O Channel Configuration
 
-Channel mapping and wiring details are provided per module.
-
 Documentation includes:
 
 - Input and output channel numbering  
@@ -104,11 +102,9 @@ Module-specific diagrams and connection examples are included inside each module
 ### MCU Firmware Examples (IoTsmart)
 
 IoTsmart does **not** yet contain its own `/examples` folder.  
-Firmware reference examples will be added in a future update by the development team.
+Firmware reference examples will be added in a future update.
 
 ### Node-RED Automation Examples (IoTflow)
-
-For complete MQTT + Node-RED automation examples, see:
 
 👉 **IoTflow Node-RED Examples**  
 https://github.com/makethingshappy/IoTflow/tree/main/Node-RED%20Examples
@@ -117,15 +113,27 @@ https://github.com/makethingshappy/IoTflow/tree/main/Node-RED%20Examples
 
 ## Ordering Information
 
-For SKUs, part numbers, and module-specific ordering details,  
-refer to the individual module folders:
+### 📦 SKU Information  
+The complete list of SKUs is provided in the following PDF located in the repository root:
 
-- **[Input](./Input/)**  
-- **[Relay2](./Relay2/)**  
-- **[SSR Small](./SSR%20Small/)**  
-- **[Octal2](./Octal2/)**  
+- **SKU Digital IoTextra.pdf**
 
-Each folder includes ordering notes and documentation.
+---
+
+### 🛒 Purchase Links  
+Order directly from the official store:
+
+- **IoTextra Input Module:**  
+  https://makethingshappy.io/collections/digital-iotextra/products/iotextra-input
+
+- **IoTextra Relay2 Module:**  
+  https://makethingshappy.io/collections/digital-iotextra/products/iotextra-relay2
+
+- **IoTextra SSR Small Module:**  
+  https://makethingshappy.io/collections/digital-iotextra/products/iotextra-ssr-small
+
+- **IoTextra Octal2 Module:**  
+  https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal2
 
 ---
 
