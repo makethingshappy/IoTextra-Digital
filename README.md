@@ -90,7 +90,7 @@ Typical usage includes:
 
 ## Examples
 
-IoTextra-Digital modules are used together with IoTsmart MCU boards and IoTflow-based automation.
+IoTextra-Digital modules are used together with [**IoTsmart**](https://makethingshappy.io/collections/iotsmart) or [**IoTbase**](https://makethingshappy.io/collections/iotbase) boards and [**IoTflow-based**](https://makethingshappy.io/pages/iotflow) automation.
 
 Module-specific diagrams and connection examples are included inside each module’s folder:
 
