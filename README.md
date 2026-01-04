@@ -2,7 +2,7 @@
 
 ## Overview
 
-**IoTextra-Digital** is a family of isolated digital I/O modules designed for reliable operation in IoT, IIoT, and smart home environments.  
+[**IoTextra-Digital**](https://makethingshappy.io/collections/digital-iotextra) is a family of isolated digital I/O modules designed for reliable operation in IoT, IIoT, and smart home environments.  
 The modules support **36 VDC–tolerant** digital inputs and robust relay or solid-state relay outputs suitable for PLC-style panels and field wiring.
 
 IoTextra modules integrate cleanly with IoTsmart MCU boards and can be used with MQTT and Node-RED workflows (e.g., via the IoTflow automation framework).
@@ -123,17 +123,10 @@ The complete list of SKUs is provided in the following PDF located in the reposi
 ### 🛒 Purchase Links  
 Order directly from the official store:
 
-- **IoTextra Input Module:**  
-  https://makethingshappy.io/collections/digital-iotextra/products/iotextra-input
-
-- **IoTextra Relay2 Module:**  
-  https://makethingshappy.io/collections/digital-iotextra/products/iotextra-relay2
-
-- **IoTextra SSR Small Module:**  
-  https://makethingshappy.io/collections/digital-iotextra/products/iotextra-ssr-small
-
-- **IoTextra Octal2 Module:**  
-  https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal2
+* [**IoTextra Input Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-input)
+* [**IoTextra Relay2 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-relay2)
+* [**IoTextra SSR Small Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-ssr-small)
+* [**IoTextra Octal2 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal2)
 
 ---
 
