@@ -1,0 +1,10 @@
+<svg width="100%" viewBox="0 0 680 120" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>IoTextra Octal overview</title>
+<desc>IoTextra Octal — 4+2+2 mixed I/O module overview with key specs</desc>
+<rect x="0" y="0" width="680" height="120" rx="10" fill="none" stroke="#e0e0de" stroke-width="0.5"/>
+<rect x="0" y="0" width="6" height="120" rx="3" fill="#8f0000"/>
+<text x="30" y="38" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="500" fill="#111111">IoTextra Octal</text>
+<text x="30" y="60" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" fill="#444444">4+2+2 mixed I/O module · 4 digital inputs · 2 NPN outputs · 2 SPST relays · galvanic isolation · 3750 V<tspan font-size="9" dy="-3">RMS</tspan></text>
+<text x="30" y="80" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" fill="#444444">Inputs up to 36 VDC · outputs up to 100 VDC / 8 A · relay 250 VAC / 5 A · HOST and Qwiic connectors</text>
+<text x="30" y="100" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" fill="#888888">Part of the IoTextra series · compatible with IoTsmart and IoTbase · Open Hardware</text>
+</svg>
