@@ -11,4 +11,4 @@ See [SKU.md](SKU.md)
 | Version | Notes |
 |---|---|
 | 3.04 | QR code and logos added to bottom side |
-| 3.02 | Initial GitHub release |
+| 3.03 | Initial GitHub release |
