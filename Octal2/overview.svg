@@ -1,0 +1,10 @@
+<svg width="100%" viewBox="0 0 680 120" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>IoTextra Octal2 overview</title>
+<desc>IoTextra Octal2 — 8-channel digital I/O module overview with key specs</desc>
+<rect x="0" y="0" width="680" height="120" rx="10" fill="none" stroke="#e0e0de" stroke-width="0.5"/>
+<rect x="0" y="0" width="6" height="120" rx="3" fill="#8f0000"/>
+<text x="30" y="38" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="500" fill="#111111">IoTextra Octal2</text>
+<text x="30" y="60" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" fill="#444444">8-channel digital I/O module · 4 isolated inputs · 4 outputs · galvanic isolation · GPIO and/or I²C modes</text>
+<text x="30" y="80" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" fill="#444444">Bipolar and Extended signal modes · HOST and Qwiic connectors · 47×56 mm · 5 VDC supply</text>
+<text x="30" y="100" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" fill="#888888">Part of the IoTextra series · compatible with IoTsmart and IoTbase · Open Hardware</text>
+</svg>
