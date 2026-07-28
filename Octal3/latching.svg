@@ -1,0 +1,10 @@
+<svg width="100%" viewBox="0 0 680 90" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Why Latching Relays</title>
+<desc>Latching relays switch on a short pulse and mechanically lock in position — contacts survive a power failure</desc>
+<rect x="0" y="0" width="680" height="90" rx="6" fill="#f0f5ff" stroke="#c8d8f0" stroke-width="0.5"/>
+<rect x="0" y="0" width="5" height="90" rx="3" fill="#0d3b6e"/>
+<text x="24" y="24" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="11" font-weight="700" fill="#c0392b" letter-spacing="0.06em">⚡ WHY LATCHING RELAYS?</text>
+<text x="24" y="46" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" fill="#333333">Latching relays switch on a short pulse and mechanically lock in position. No holding current, no coil heat, and — critically —</text>
+<text x="24" y="63" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" fill="#333333"><tspan font-weight="700">contacts survive a power failure</tspan>. When power returns, the relay is exactly where you left it — the right choice</text>
+<text x="24" y="80" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" fill="#333333">anywhere state retention matters: valve control, bypass switching, or any load that must not change state unexpectedly.</text>
+</svg>
