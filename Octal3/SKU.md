@@ -1,14 +1,21 @@
 # SKU — IoTextra Octal3
 
 ```
-040304vvvcc
+040304vvvrcc
 ```
 
 | Field | Description |
 |---|---|
 | `040304` | Product code — IoTextra Octal3 |
 | `vvv` | Version (e.g. 302 = version 3.02) |
+| `r` | Relay model |
 | `cc` | Communication |
+
+**Relay model (r):**
+
+| Value | Description |
+|---|---|
+| 0 | KEMET EC2-5SNU (fixed, not selectable) |
 
 **Communication (cc):**
 
