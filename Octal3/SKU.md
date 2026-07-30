@@ -15,7 +15,7 @@
 
 | Value | Description |
 |---|---|
-| 0 | KEMET EC2-5SNU (fixed, not selectable) |
+| 3 | KEMET EC2-5SNU |
 
 **Communication (cc):**
 
