@@ -270,6 +270,30 @@ jobs:
               )
               new_body_html = replace_marker(body_html, 'OVERVIEW', overview_div, overview_fallback)
 
+              if logo_file:
+                  # Badge CDN URLs are hardcoded right here — there are only a
+                  # handful of shared badge-set files, uploaded to Shopify Files
+                  # by hand, with fixed names and content. No external file,
+                  # no API lookup, no extra token scopes.
+                  BADGE_CDN_MAP = {
+                      '3-logo.svg': 'https://cdn.shopify.com/s/files/1/0860/7481/8846/files/3-logo.svg?v=1787594973',
+                      '5-logo.svg': 'https://cdn.shopify.com/s/files/1/0860/7481/8846/files/5-logo.svg?v=1787561494',
+                  }
+                  cdn_url = BADGE_CDN_MAP.get(logo_file)
+
+                  if cdn_url:
+                      badge_img = f'<img src="{cdn_url}" style="max-width:1000px;width:100%;height:auto">'
+                      badges_fallback = (
+                          r'<img[^>]*src="[^"]*(?:software\.svg|-logo\.svg)[^"]*"[^>]*>'
+                      )
+                      new_body_html = replace_marker(new_body_html, 'BADGES', badge_img, badges_fallback)
+                      print(f"  Badge CDN url found in {map_path} and inserted: {cdn_url}")
+                  else:
+                      print(f"  No CDN URL hardcoded for {logo_file!r} in BADGE_CDN_MAP "
+                            f"— leaving badge markup untouched.")
+              else:
+                  print(f"  No badge file for this module — leaving existing badge markup untouched.")
+
               if new_body_html != body_html:
                   shopify_rest('PUT', f'/products/{product_id}.json', {
                       'product': {'id': int(product_id), 'body_html': new_body_html}
