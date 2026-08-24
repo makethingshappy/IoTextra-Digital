@@ -35,7 +35,8 @@ jobs:
 
       - name: Sync overview to README and Shopify
         env:
-          SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          SHOPIFY_CLIENT_ID: ${{ secrets.SHOPIFY_CLIENT_ID }}
+          SHOPIFY_CLIENT_SECRET: ${{ secrets.SHOPIFY_CLIENT_SECRET }}
           GH_TOKEN: ${{ secrets.MTH_SYNC_TOKEN }}
           MODULE: ${{ steps.mod.outputs.module }}
           PRODUCT_ID: ${{ steps.mod.outputs.product_id }}
@@ -43,13 +44,31 @@ jobs:
         run: |
           python3 << 'PYEOF'
           import os, re, glob, json
-          import urllib.request, urllib.error
+          import urllib.request, urllib.error, urllib.parse
 
           module = os.environ['MODULE']
           product_id = os.environ['PRODUCT_ID']
           repo = os.environ['REPO']  # e.g. makethingshappy/IoTextra-Digital
           shop = '55b706-7c.myshopify.com'
-          shopify_token = os.environ['SHOPIFY_TOKEN']
+          client_id = os.environ['SHOPIFY_CLIENT_ID']
+          client_secret = os.environ['SHOPIFY_CLIENT_SECRET']
+
+          # 0. Exchange client_id + client_secret for a fresh Admin API token
+          #    (Dev Dashboard apps don't have a static token, only 24h ones)
+          token_data = urllib.parse.urlencode({
+              'grant_type': 'client_credentials',
+              'client_id': client_id,
+              'client_secret': client_secret,
+          }).encode('utf-8')
+          token_req = urllib.request.Request(
+              f'https://{shop}/admin/oauth/access_token',
+              data=token_data, method='POST'
+          )
+          token_req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+          with urllib.request.urlopen(token_req) as resp:
+              token_result = json.loads(resp.read())
+          shopify_token = token_result['access_token']
+          print(f"Got fresh Shopify access token, scope: {token_result.get('scope')}")
 
           folder = module
           overview_path = f'{folder}/overview.md'
