@@ -8,7 +8,7 @@
 > Part of the IoTextra series · compatible with IoTsmart and IoTbase · Open Hardware
 <!-- OVERVIEW_END -->
 
-![software](software.svg)
+![software](5-logo.svg)
 
 ## SKU
 
