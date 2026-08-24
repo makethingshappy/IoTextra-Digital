@@ -1,0 +1,205 @@
+name: Overview Sync
+
+on:
+  push:
+    paths:
+      - 'Relay2/overview.md'
+  workflow_dispatch:
+    inputs:
+      module:
+        description: 'Module folder name (e.g. Relay2, Octal2)'
+        required: true
+        default: 'Relay2'
+      shopify_product_id:
+        description: 'Shopify product ID (numbers only)'
+        required: true
+        default: '9031823294750'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Determine module
+        id: mod
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "module=${{ github.event.inputs.module }}" >> "$GITHUB_OUTPUT"
+            echo "product_id=${{ github.event.inputs.shopify_product_id }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "module=Relay2" >> "$GITHUB_OUTPUT"
+            echo "product_id=9031823294750" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync overview to README and Shopify
+        env:
+          SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.MTH_SYNC_TOKEN }}
+          MODULE: ${{ steps.mod.outputs.module }}
+          PRODUCT_ID: ${{ steps.mod.outputs.product_id }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 << 'PYEOF'
+          import os, re, glob, json
+          import urllib.request, urllib.error
+
+          module = os.environ['MODULE']
+          product_id = os.environ['PRODUCT_ID']
+          repo = os.environ['REPO']  # e.g. makethingshappy/IoTextra-Digital
+          shop = '55b706-7c.myshopify.com'
+          shopify_token = os.environ['SHOPIFY_TOKEN']
+
+          folder = module
+          overview_path = f'{folder}/overview.md'
+          readme_path = f'{folder}/README.md'
+
+          # 1. Read overview.md
+          with open(overview_path, encoding='utf-8') as f:
+              content = f.read().strip()
+
+          lines = content.split('\n')
+          title = lines[0].lstrip('#').strip()
+          body_lines = [l.strip() for l in lines[1:] if l.strip()]
+
+          # 2. Find the *-logo.svg badge file in the same folder
+          logo_candidates = glob.glob(f'{folder}/*-logo.svg')
+          if not logo_candidates:
+              raise SystemExit(f"ERROR: no *-logo.svg file found in {folder}/")
+          logo_file = os.path.basename(logo_candidates[0])
+          print(f"Found badge file: {logo_file}")
+
+          # 3. Build blockquote for README
+          bq = [f"> **{title}**", ">"]
+          for i, l in enumerate(body_lines):
+              bq.append(f"> {l}")
+              if i != len(body_lines) - 1:
+                  bq.append(">")
+          blockquote = "\n".join(bq)
+          marker_block = f"<!-- OVERVIEW_START -->\n{blockquote}\n<!-- OVERVIEW_END -->"
+
+          with open(readme_path, encoding='utf-8') as f:
+              readme = f.read()
+
+          # Replace old overview.svg image OR existing marker block
+          if '<!-- OVERVIEW_START -->' in readme:
+              readme = re.sub(
+                  r'<!-- OVERVIEW_START -->.*?<!-- OVERVIEW_END -->',
+                  marker_block, readme, flags=re.DOTALL
+              )
+          else:
+              readme = re.sub(
+                  r'!\[overview\]\(overview\.svg\)',
+                  marker_block, readme
+              )
+
+          # Fix the software badge line to point at the real logo file
+          readme = re.sub(
+              r'!\[software\]\([^)]*\)',
+              f'![software]({logo_file})',
+              readme
+          )
+
+          with open(readme_path, 'w', encoding='utf-8') as f:
+              f.write(readme)
+
+          # 4. Commit README.md back to the repo via GitHub API (contents endpoint)
+          gh_token = os.environ['GH_TOKEN']
+
+          def gh_api(method, path, payload=None):
+              url = f'https://api.github.com{path}'
+              data = json.dumps(payload).encode('utf-8') if payload else None
+              req = urllib.request.Request(url, data=data, method=method)
+              req.add_header('Authorization', f'Bearer {gh_token}')
+              req.add_header('Accept', 'application/vnd.github+json')
+              with urllib.request.urlopen(req) as resp:
+                  return json.loads(resp.read())
+
+          existing = gh_api('GET', f'/repos/{repo}/contents/{readme_path}')
+          sha = existing['sha']
+
+          import base64
+          new_content_b64 = base64.b64encode(readme.encode('utf-8')).decode('ascii')
+          gh_api('PUT', f'/repos/{repo}/contents/{readme_path}', {
+              'message': f'Auto-sync overview for {module}',
+              'content': new_content_b64,
+              'sha': sha,
+          })
+          print("README.md committed.")
+
+          # 5. Update Shopify product body_html — OVERVIEW block only.
+          #    Badges are handled entirely manually by Simon and are never
+          #    touched by this Action.
+          p_tags = []
+          for i, l in enumerate(body_lines):
+              is_last = (i == len(body_lines) - 1)
+              color = "#888888" if is_last else "#444444"
+              size = 14 if is_last else 16
+              margin = "margin:0" if is_last else "margin:0 0 4px"
+              p_tags.append(
+                  f'  <p style="{margin};font-family:\'Roboto Condensed\',sans-serif;'
+                  f'font-size:{size}px;color:{color}">{l}</p>'
+              )
+          overview_div = (
+              '<div style="border-left:4px solid #8f0000;padding:10px 14px;margin:12px 0;'
+              'background:#fdf2f2;border-radius:0 6px 6px 0">\n'
+              f'  <p style="margin:0 0 6px;font-weight:600;font-family:\'Roboto Condensed\',sans-serif;'
+              f'font-size:19px;color:#111111">{title}</p>\n'
+              + "\n".join(p_tags) + "\n</div>"
+          )
+
+          # 7. Fetch current product body_html, replace between markers, PUT back
+          def shopify_rest(method, path, payload=None):
+              data = json.dumps(payload).encode('utf-8') if payload else None
+              req = urllib.request.Request(
+                  f'https://{shop}/admin/api/2024-01{path}',
+                  data=data, method=method
+              )
+              req.add_header('Content-Type', 'application/json')
+              req.add_header('X-Shopify-Access-Token', shopify_token)
+              req.add_header('Cache-Control', 'no-cache')
+              with urllib.request.urlopen(req) as resp:
+                  return json.loads(resp.read())
+
+          product = shopify_rest('GET', f'/products/{product_id}.json')
+          body_html = product['product']['body_html']
+
+          def replace_marker(html, marker, new_content, fallback_pattern):
+              """Replace between markers if present. Otherwise, find the old
+              block by its recognizable structure (fallback_pattern), replace
+              it, and wrap the new content in markers so future runs are
+              marker-based (idempotent) without any manual Shopify editing."""
+              start = f'<!-- {marker}_START -->'
+              end = f'<!-- {marker}_END -->'
+              marker_pattern = f'{re.escape(start)}.*?{re.escape(end)}'
+              replacement = f'{start}\n{new_content}\n{end}'
+
+              new_html, count = re.subn(marker_pattern, replacement, html, flags=re.DOTALL)
+              if count > 0:
+                  return new_html
+
+              # No markers yet -> find the old content by structure and replace it,
+              # inserting markers around the new content for next time.
+              new_html, count = re.subn(fallback_pattern, replacement, html, flags=re.DOTALL)
+              if count == 0:
+                  print(f"WARNING: could not locate existing {marker} block in body_html "
+                        f"(neither markers nor recognizable old content found) — skipping.")
+                  return html
+              print(f"{marker}: no markers found, replaced by structure match and added markers.")
+              return new_html
+
+          # Old overview div (built earlier by hand, border-left:4px solid #8f0000...)
+          # OR a leftover <img ...overview.svg> tag if this product was never migrated.
+          overview_fallback = (
+              r'<div style="border-left:4px solid #8f0000[^"]*"[^>]*>.*?</div>'
+              r'|<img[^>]*src="[^"]*overview\.svg"[^>]*>'
+          )
+
+          body_html = replace_marker(body_html, 'OVERVIEW', overview_div, overview_fallback)
+
+          shopify_rest('PUT', f'/products/{product_id}.json', {
+              'product': {'id': int(product_id), 'body_html': body_html}
+          })
+          print("Shopify product updated.")
+          PYEOF
