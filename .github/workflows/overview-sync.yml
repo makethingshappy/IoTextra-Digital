@@ -226,10 +226,10 @@ jobs:
               if readme != orig_readme:
                   with open(readme_path, 'w', encoding='utf-8') as f:
                       f.write(readme)
-                  existing = gh_api('GET', f'/repos/{repo}/contents/{readme_path}')
+                  existing = gh_api('GET', f'/repos/{repo}/contents/{urllib.parse.quote(readme_path)}')
                   sha = existing['sha']
                   new_content_b64 = base64.b64encode(readme.encode('utf-8')).decode('ascii')
-                  gh_api('PUT', f'/repos/{repo}/contents/{readme_path}', {
+                  gh_api('PUT', f'/repos/{repo}/contents/{urllib.parse.quote(readme_path)}', {
                       'message': f'Auto-sync overview for {folder}',
                       'content': new_content_b64,
                       'sha': sha,
