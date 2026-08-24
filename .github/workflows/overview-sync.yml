@@ -287,7 +287,7 @@ jobs:
                           r'<img[^>]*src="[^"]*(?:software\.svg|-logo\.svg)[^"]*"[^>]*>'
                       )
                       new_body_html = replace_marker(new_body_html, 'BADGES', badge_img, badges_fallback)
-                      print(f"  Badge CDN url found in {map_path} and inserted: {cdn_url}")
+                      print(f"  Badge CDN url found in BADGE_CDN_MAP and inserted: {cdn_url}")
                   else:
                       print(f"  No CDN URL hardcoded for {logo_file!r} in BADGE_CDN_MAP "
                             f"— leaving badge markup untouched.")
