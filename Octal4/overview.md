@@ -1,0 +1,7 @@
+# IoTextra Octal4
+
+4 isolated digital inputs · 4 SPST relays · galvanic isolation · 2500 VRMS
+
+Inputs field-configurable 12/18/24/36 VDC per channel via solder jumpers · relay contacts 250 VAC / 30 VDC / 5 A · control via GPIO and/or I²C (TCA9534)
+
+Part of the IoTextra series · compatible with IoTsmart and IoTbase · Open Hardware
