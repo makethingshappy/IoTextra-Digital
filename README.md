@@ -3,7 +3,7 @@
 ## Overview
 
 [**IoTextra-Digital**](https://makethingshappy.io/collections/digital-iotextra) is a family of isolated digital I/O modules designed for reliable operation in IoT, IIoT, and smart home environments.  
-The modules support **36 VDC–tolerant** digital inputs and robust relay or solid-state relay outputs suitable for PLC-style panels and field wiring.
+Each module combines digital inputs with relay, solid-state relay, transistor, or MOSFET outputs — the exact configuration, voltage range, and isolation technology vary by module and are documented in its own datasheet.
 
 IoTextra modules integrate cleanly with IoTsmart MCU boards and can be used with MQTT and Node-RED workflows (e.g., via the IoTflow automation framework).
 
@@ -11,11 +11,11 @@ IoTextra modules integrate cleanly with IoTsmart MCU boards and can be used with
 
 ## Features & Capabilities
 
-- Industrial-style digital I/O with **36 VDC** tolerant inputs  
-- Opto-isolated inputs and relay/SSR outputs for improved noise immunity  
-- Clean terminal block layout for fast, error-free wiring  
-- Compatible with IoTsmart modules, Raspberry Pi PICO, and other MCUs  
-- Suitable for long-term installations in smart buildings, labs, and light industrial systems  
+- Industrial-grade digital I/O, galvanically isolated per channel
+- Relay, solid-state relay, transistor, or MOSFET outputs depending on the module
+- Clean terminal block layout for fast, error-free wiring
+- Compatible with IoTsmart modules, Raspberry Pi PICO, and other MCUs
+- Suitable for long-term installations in smart buildings, labs, and light industrial systems
 
 ---
 
@@ -25,20 +25,25 @@ Each IoTextra-Digital module has its own electrical and mechanical specification
 
 Module folders:
 
-- **[Input/v.3.02](./Input/v.3.02/)**  
-- **[Relay2/v3.02](./Relay2/v3.02/)**  
-- **[SSR Small/v.3.02](./SSR%20Small/v.3.02/)**  
-- **[Octal2/v.3.02](./Octal2/v.3.02/)**  
+- **[Input](./Input/)**
+- **[MOSFET2](./MOSFET2/)**
+- **[Octal](./Octal/)**
+- **[Octal2](./Octal2/)**
+- **[Octal3](./Octal3/)**
+- **[Octal4](./Octal4/)**
+- **[Relay](./Relay/)**
+- **[Relay2](./Relay2/)**
+- **[SSR Small](./SSR%20Small/)**
 
 Typical documentation includes:
 
-- Maximum input voltage: **36 VDC**  
-- Relay or SSR output ratings  
-- Electrical thresholds and isolation design  
-- Load and protection characteristics  
-- Mechanical layout and terminal labeling  
+- Maximum input voltage and isolation rating (varies by module — see individual datasheet)
+- Output type and ratings (relay, SSR, transistor, or MOSFET)
+- Electrical thresholds and isolation design
+- Load and protection characteristics
+- Mechanical layout and terminal labeling
 
-Refer to each module’s documentation for exact technical data.
+Refer to each module's documentation for exact technical data.
 
 ---
 
@@ -46,14 +51,13 @@ Refer to each module’s documentation for exact technical data.
 
 Documentation includes:
 
-- Input and output channel numbering  
-- Terminal block identification  
-- Wiring patterns for switches, sensors, and loads  
-- Recommended safety and polarity guidelines  
+- Input and output channel numbering
+- Terminal block identification
+- Wiring patterns for switches, sensors, and loads
+- Recommended safety and polarity guidelines
 
 > **Important:**  
-> NPN transistor outputs apply **only to the IoTextra Octal2 module**.  
-> All other IoTextra modules use relays or solid-state relays.
+> Output type differs by module — NPN transistor outputs (Octal2), MOSFET outputs (MOSFET2), and relay or solid-state relay outputs (all other modules). Check the specific module's datasheet before wiring.
 
 ---
 
@@ -63,15 +67,10 @@ Module-level wiring diagrams include:
 
 - Terminal block layout  
 - Polarity and signal direction  
-- Relay/SSR load wiring examples  
+- Relay/SSR/transistor/MOSFET load wiring examples  
 - Safety considerations for higher-voltage operation  
 
-See the diagrams located in:
-
-- **[Input/v.3.02](./Input/v.3.02/)**  
-- **[Relay2/v3.02](./Relay2/v3.02/)**  
-- **[SSR Small/v.3.02](./SSR%20Small/v.3.02/)**  
-- **[Octal2/v.3.02](./Octal2/v.3.02/)**  
+See the diagrams located in each module's folder listed above.
 
 ---
 
@@ -84,7 +83,7 @@ Typical usage includes:
 - Connecting module inputs/outputs to IoTsmart or Raspberry Pi PICO boards  
 - Reading/writing digital I/O via GPIO or MCU firmware  
 - Triggering MQTT events or Node-RED flows  
-- Following IoTflow’s MQTT topic conventions for automation
+- Following IoTflow's MQTT topic conventions for automation
 
 ---
 
@@ -92,12 +91,7 @@ Typical usage includes:
 
 IoTextra-Digital modules are used together with [**IoTsmart**](https://makethingshappy.io/collections/iotsmart) or [**IoTbase**](https://makethingshappy.io/collections/iotbase) boards and [**IoTflow-based**](https://makethingshappy.io/pages/iotflow) automation.
 
-Module-specific diagrams and connection examples are included inside each module’s folder:
-
-- **[Input/v.3.02](./Input/v.3.02/)**  
-- **[Relay2/v3.02](./Relay2/v3.02/)**  
-- **[SSR Small/v.3.02](./SSR%20Small/v.3.02/)**  
-- **[Octal2/v.3.02](./Octal2/v.3.02/)**  
+Module-specific diagrams and connection examples are included inside each module's folder listed above.
 
 ### MCU Firmware Examples (IoTsmart)
 
@@ -124,9 +118,13 @@ The complete list of SKUs is provided in the following PDF located in the reposi
 Order directly from the official store:
 
 * [**IoTextra Input Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-input)
+* [**IoTextra MOSFET2 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-mosfet2)
+* [**IoTextra Octal Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal)
+* [**IoTextra Octal2 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal2)
+* [**IoTextra Octal3 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal3)
+* [**IoTextra Octal4 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal4)
 * [**IoTextra Relay2 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-relay2)
 * [**IoTextra SSR Small Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-ssr-small)
-* [**IoTextra Octal2 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal2)
 
 ---
 
