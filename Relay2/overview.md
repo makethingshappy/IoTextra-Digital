@@ -1,6 +1,6 @@
 # IoTextra Relay2
 
-2-channel SPDT relay module · 250 VAC / 30 VDC · 10 A · GPIO and/or I²C modes
+4-channel SPDT relay module · 250 VAC / 30 VDC · 10 A · GPIO and/or I²C modes
 
 Relay options: Panasonic ALQ105 · Omron G5Q-14 · HF33F/005-ZS3 · TE PE014005 · HOST and Qwiic connectors
 
