@@ -1,39 +1,47 @@
+"""
+IoTextra SSR Small - MicroPython example (GPIO mode)
+Host: IoTsmart RP2040 (Waveshare RP2040-Tiny)
+
+Switches 8 solid-state relays RL1-RL8 via AP0-AP7 on the HOST-P connector.
+
+Control polarity (IoTextra SSR Small datasheet Rev.3-02):
+  AP line = 1 -> SSR off
+  AP line = 0 -> SSR on (channel LED lit)
+Outputs are initialised to 1 (OFF) so no load switches on at start-up.
+"""
 from machine import Pin
 import time
 
-# --- Configuration ---
-# Define the GPIO pins connected to the 8 SSR output channels.
-# Configuration: IoTextra SSR Small (8 channels) driven by IoTsmart RP2040 (Waveshare RP2040-tiny).
-# NOTE: Using actual GPIO numbers for RP2040.
+# RL1..RL8 = AP0..AP7 -> RP2040 GPIO (IoTsmart RP2040 pinout, rev 1-02)
 GPIO_PINS = [12, 11, 10, 9, 26, 15, 14, 13]
 
-# List to hold the Pin objects representing the digital outputs (DO)
-digital_outputs = []
+ssrs = [Pin(p, Pin.OUT, value=1) for p in GPIO_PINS]  # start OFF
 
-# --- Initialization ---
-print(f"Initializing 8 SSR output pins: {GPIO_PINS}")
-# We initialize Pin objects only ONCE, outside the main loop.
-for pin_num in GPIO_PINS:
-    # Set pin as OUTPUT
-    digital_outputs.append(Pin(pin_num, Pin.OUT))
 
-# --- Main Loop ---
-print("Starting 8-Channel SSR Switching Loop...")
+def set_ssr(pin, on):
+    """Active-low: on=True drives the line low."""
+    pin.value(0 if on else 1)
 
-while True:
-    print("Turning channels ON sequentially...")
-    # Iterate through all Pin objects
-    for i, output_pin in enumerate(digital_outputs):
-        output_pin.value(1)  # Turn ON (High)
-        # Using i+1 for Channel number for user-friendly 1-based indexing
-        print(f"Channel {i+1} (Pin {GPIO_PINS[i]}): ON")
-        time.sleep(0.5)   # Wait 0.5 second
 
-    print("Turning channels OFF sequentially...")
-    for i, output_pin in enumerate(digital_outputs):
-        output_pin.value(0)  # Turn OFF (Low)
-        print(f"Channel {i+1} (Pin {GPIO_PINS[i]}): OFF")
-        time.sleep(0.5)   # Wait 0.5 second
-        
-    print("Cycle complete. Waiting 3 seconds before restart.\n")
-    time.sleep(3)
+def all_off():
+    for pin in ssrs:
+        set_ssr(pin, False)
+
+
+print("IoTextra SSR Small switching cycle. Press Ctrl+C to stop.")
+
+try:
+    while True:
+        for ch, pin in enumerate(ssrs, start=1):
+            set_ssr(pin, True)
+            print("RL{} (GP{}): ON".format(ch, GPIO_PINS[ch - 1]))
+            time.sleep(0.5)
+        for ch, pin in enumerate(ssrs, start=1):
+            set_ssr(pin, False)
+            print("RL{} (GP{}): OFF".format(ch, GPIO_PINS[ch - 1]))
+            time.sleep(0.5)
+        print("Cycle complete. Restarting in 3 s.\n")
+        time.sleep(3)
+finally:
+    all_off()
+    print("All SSRs OFF.")
