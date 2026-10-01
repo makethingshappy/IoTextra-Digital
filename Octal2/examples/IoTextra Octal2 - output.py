@@ -1,41 +1,48 @@
-Python
+"""
+IoTextra Octal2 - digital outputs, MicroPython example (GPIO mode)
+Host: IoTsmart RP2040 (Waveshare RP2040-Tiny)
 
+Switches 4 isolated digital outputs DO1-DO4 via AP4-AP7 on the HOST-P connector.
+(Inputs IN1-IN4 are on AP0-AP3, see "IoTextra Octal2 - input.py".)
+
+Control polarity (IoTextra Octal2 datasheet Rev.3-02):
+  AP line = 1 -> output transistor OFF
+  AP line = 0 -> output transistor ON
+Outputs are initialised to 1 (OFF) so no load switches on at start-up.
+"""
 from machine import Pin
 import time
 
-# --- Configuration ---
-# Define the GPIO pins connected to the output channels.
-# Configuration: IoTextra Octal2 driven by IoTsmart RP2040 (Waveshare RP2040-tiny).
-# NOTE: Using actual GPIO numbers for RP2040: 26, 15, 14, 13
+# DO1..DO4 = AP4..AP7 -> RP2040 GPIO (IoTsmart RP2040 pinout, rev 1-02)
 GPIO_PINS = [26, 15, 14, 13]
 
-# List to hold the Pin objects representing the digital outputs (DO)
-digital_outputs = []
+outputs = [Pin(p, Pin.OUT, value=1) for p in GPIO_PINS]  # start OFF
 
-# --- Initialization ---
-print(f"Initializing output pins: {GPIO_PINS}")
-# We initialize Pin objects only ONCE, outside the main loop.
-for pin_num in GPIO_PINS:
-    # Set pin as OUTPUT
-    digital_outputs.append(Pin(pin_num, Pin.OUT))
 
-# --- Main Loop ---
-print("Starting Output Cycle Loop...")
+def set_output(pin, on):
+    """Active-low: on=True drives the line low."""
+    pin.value(0 if on else 1)
 
-while True:
-    print("Turning channels ON sequentially...")
-    # Iterate through the list of Pin objects
-    for i, output_pin in enumerate(digital_outputs):
-        output_pin.value(1)  # Turn ON (High)
-        # Use GPIO_PINS[i] to print the actual pin number from the list
-        print(f"Channel {i} (Pin {GPIO_PINS[i]}): ON")
-        time.sleep(1)  # Wait 1 second
 
-    print("Turning channels OFF sequentially...")
-    for i, output_pin in enumerate(digital_outputs):
-        output_pin.value(0)  # Turn OFF (Low)
-        print(f"Channel {i} (Pin {GPIO_PINS[i]}): OFF")
-        time.sleep(1)  # Wait 1 second
-        
-    print("Cycle complete. Waiting 3 seconds before restart.\n")
-    time.sleep(3)
+def all_off():
+    for pin in outputs:
+        set_output(pin, False)
+
+
+print("IoTextra Octal2 output cycle. Press Ctrl+C to stop.")
+
+try:
+    while True:
+        for ch, pin in enumerate(outputs, start=1):
+            set_output(pin, True)
+            print("DO{} (GP{}): ON".format(ch, GPIO_PINS[ch - 1]))
+            time.sleep(1)
+        for ch, pin in enumerate(outputs, start=1):
+            set_output(pin, False)
+            print("DO{} (GP{}): OFF".format(ch, GPIO_PINS[ch - 1]))
+            time.sleep(1)
+        print("Cycle complete. Restarting in 3 s.\n")
+        time.sleep(3)
+finally:
+    all_off()
+    print("All outputs OFF.")

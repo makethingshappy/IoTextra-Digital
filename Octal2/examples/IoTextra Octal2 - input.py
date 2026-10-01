@@ -1,39 +1,34 @@
+"""
+IoTextra Octal2 - digital inputs, MicroPython example (GPIO mode)
+Host: IoTsmart RP2040 (Waveshare RP2040-Tiny)
+
+Reads 4 isolated digital inputs IN1-IN4 via AP0-AP3 on the HOST-P connector.
+(Outputs DO1-DO4 are on AP4-AP7, see "IoTextra Octal2 - output.py".)
+
+Signal polarity (IoTextra Octal2 datasheet Rev.3-02):
+  input 4...36 V -> AP line reads 0 (ACTIVE)
+  input 0...2 V  -> AP line reads 1 (INACTIVE)
+"""
 from machine import Pin
 import time
 
-# --- Configuration ---
-# Define the GPIO pins connected to the input channels.
-# Configuration: IoTextra Octal2 (INPUT channels) driven by IoTsmart RP2040 (Waveshare RP2040-tiny).
-# NOTE: Using actual GPIO numbers for RP2040: 12, 11, 10, 9
+# IN1..IN4 = AP0..AP3 -> RP2040 GPIO (IoTsmart RP2040 pinout, rev 1-02)
 GPIO_PINS = [12, 11, 10, 9]
 
-# List to hold the Pin objects representing the digital inputs (DI)
-digital_inputs = []
+inputs = [Pin(p, Pin.IN) for p in GPIO_PINS]
 
-# --- Initialization ---
-print(f"Initializing input pins: {GPIO_PINS}")
-# We initialize Pin objects only ONCE, outside the main loop.
-for pin_num in GPIO_PINS:
-    # Set pin as INPUT. 
-    # IoTextra Octal2 (INPUT) modules have internal circuitry for 24V,
-    # so standard Pin.IN is sufficient.
-    digital_inputs.append(Pin(pin_num, Pin.IN))
 
-# --- Main Loop ---
-print("Starting Input Monitor. Press Ctrl+C to stop.")
+def is_active(pin):
+    """True when voltage is present on the input (active-low line)."""
+    return pin.value() == 0
+
+
+print("IoTextra Octal2 input monitor. Press Ctrl+C to stop.")
 
 while True:
-    print("-" * 30)
-    # Iterate through all configured channels
-    for i, input_pin in enumerate(digital_inputs):
-        # Read the current value (0 or 1)
-        state = input_pin.value()
-        
-        # Determine status for clear output
-        status_text = "HIGH / Active" if state else "LOW / Inactive"
-        
-        # Print status clearly
-        print(f"Channel {i} (Pin {GPIO_PINS[i]}): {state} ({status_text})")
-    
-    # Wait for 1 second before the next scan
+    print("-" * 36)
+    for ch, pin in enumerate(inputs, start=1):
+        raw = pin.value()
+        state = "ACTIVE   (voltage present)" if is_active(pin) else "inactive (no voltage)"
+        print("IN{} (GP{}): raw={} -> {}".format(ch, GPIO_PINS[ch - 1], raw, state))
     time.sleep(1)
