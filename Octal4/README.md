@@ -5,6 +5,8 @@
 >
 > Inputs field-configurable 12/18/24/36 VDC per channel via solder jumpers · relay contacts 250 VAC / 30 VDC / 5 A · control via GPIO and/or I²C (TCA9534)
 >
+> Works with Raspberry Pi, Raspberry Pi Pico / Pico 2 (RP2040 / RP2350) and ESP32
+>
 > DIN-rail mounting: A 3D-printable DIN-rail mounting tray is available — <a href="https://www.printables.com/model/1802141-din-rail-mount-for-make-things-happy-iotextra">view on Printables</a>
 >
 > Part of the IoTextra series · compatible with IoTsmart and IoTbase · Open Hardware
