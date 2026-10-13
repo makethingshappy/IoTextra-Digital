@@ -3,7 +3,7 @@
 >
 > 4+2+2 I/O module · 4 digital inputs · 2 NPN outputs · 2 SPST relays · galvanic isolation · 3750 VRMS
 >
-> Inputs up to 36 VDC · outputs up to 100 VDC / 8 A · relay 250 VAC / 5 A · HOST and Qwiic connectors
+> Inputs up to 36 VDC · outputs up to 48 VDC / 8 A · relay 250 VAC / 5 A · HOST and Qwiic connectors
 >
 > Works with Raspberry Pi, Raspberry Pi Pico / Pico 2 (RP2040 / RP2350) and ESP32
 >
