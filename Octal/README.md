@@ -1,5 +1,5 @@
 <!-- OVERVIEW_START -->
-> **IoTextra Octal**
+> **4x DI + 2x DO-NPN + 2x SPST - IoTextra Octal**
 >
 > 4+2+2 I/O module · 4 digital inputs · 2 NPN outputs · 2 SPST relays · galvanic isolation · 3750 VRMS
 >
