@@ -1,5 +1,5 @@
 <!-- OVERVIEW_START -->
-> **IoTextra Octal2**
+> **4x DI + 4x DO-NPN - IoTextra Octal2**
 >
 > 8-channel digital I/O module · 4 isolated inputs · 4 outputs · galvanic isolation · GPIO and/or I²C modes
 >
