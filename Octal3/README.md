@@ -1,5 +1,5 @@
 <!-- OVERVIEW_START -->
-> **IoTextra Octal3**
+> **4x DI + 4x Latching-DPDT - IoTextra Octal3**
 >
 > 4 isolated digital inputs · 4 latching DPDT relays · galvanic isolation · 3750 VRMS
 >
