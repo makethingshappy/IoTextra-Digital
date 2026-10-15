@@ -1,4 +1,4 @@
-# IoTextra Relay2
+# 4x SPDT - IoTextra Relay2
 
 4-channel SPDT relay module · 250 VAC / 30 VDC · 10 A · GPIO and/or I²C modes
 
