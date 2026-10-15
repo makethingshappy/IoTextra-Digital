@@ -1,5 +1,5 @@
 <!-- OVERVIEW_START -->
-> **IoTextra Octal4**
+> **4x DI-ISO1211 + 4x SPST - IoTextra Octal4**
 >
 > 4 isolated digital inputs · 4 SPST relays · galvanic isolation · 2500 VRMS
 >
