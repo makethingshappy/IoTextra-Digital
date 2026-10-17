@@ -1,5 +1,5 @@
 <!-- OVERVIEW_START -->
-> **IoTextra SSR Small**
+> **8x SSR-SMD4 - IoTextra SSR Small**
 >
 > 8-channel solid-state relay module · SPST-NO · galvanic isolation · 5000 VRMS · on-resistance from 0.05 Ω
 >
