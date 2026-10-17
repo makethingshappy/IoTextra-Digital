@@ -1,5 +1,5 @@
 <!-- OVERVIEW_START -->
-> **IoTextra MOSFET2**
+> **8x MOSFET-SOP8 - IoTextra MOSFET2**
 >
 > 8-channel N-channel MOSFET switch module · galvanic isolation · PWM capable · up to 90 VDC / 9 A
 >
