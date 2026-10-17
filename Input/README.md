@@ -1,5 +1,5 @@
 <!-- OVERVIEW_START -->
-> **IoTextra Input**
+> **8x DI - IoTextra Input**
 >
 > 8-channel digital input module · galvanic isolation · 3750V RMS · TVS protection
 >
