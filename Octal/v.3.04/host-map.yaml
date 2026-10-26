@@ -1,0 +1,23 @@
+kind: module
+product: IoTextra Octal
+revision: "3.04"
+# Channel -> HOST line (AP0..AP7) and/or TCA9534 port bit
+# active: level on the HOST line / expander bit that means "input active" or "output on"
+# expander parallel: P0..P7 are wired to the same nets as AP0..AP7 (I2C optional).
+#   In I2C mode the MCU must leave those AP lines as inputs (high-Z); TCA9534 powers up with all ports as inputs.
+# Source: IoTextra Octal 3.04 schematic
+# HOST AP4 position goes through a solder bridge: SB2 -> RL1 (module AP4 net), or SB1 -> TCA9534 INT
+expander:
+  chip: TCA9534
+  address: "0x20-0x27 (TCA9534) / 0x38-0x3F (TCA9534A); A2..A0 set by SW1, ON = 0"
+  wiring: parallel        # P4 is on the module AP4 net (after SB2)
+  int: {host: AP4, via: SB1}
+channels:
+  IN1: {type: DI, ap: AP0, bit: P0, active: low}
+  IN2: {type: DI, ap: AP1, bit: P1, active: low}
+  IN3: {type: DI, ap: AP2, bit: P2, active: low}
+  IN4: {type: DI, ap: AP3, bit: P3, active: low}
+  RL1: {type: relay_spst, ap: AP4, via: SB2, bit: P4, active: low}   # K1
+  RL2: {type: relay_spst, ap: AP5, bit: P5, active: low}             # K2
+  DO1: {type: npn, ap: AP6, bit: P6, active: low}
+  DO2: {type: npn, ap: AP7, bit: P7, active: low}
