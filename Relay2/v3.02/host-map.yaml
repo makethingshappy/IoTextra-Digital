@@ -1,0 +1,19 @@
+kind: module
+product: IoTextra Relay2
+revision: "3.02"
+# Channel -> HOST line (AP0..AP7) and/or TCA9534 port bit
+# active: level on the HOST line / expander bit that means "input active" or "output on"
+# expander parallel: P0..P7 are wired to the same nets as AP0..AP7 (I2C optional).
+#   In I2C mode the MCU must leave those AP lines as inputs (high-Z); TCA9534 powers up with all ports as inputs.
+# Source: IoTextra Relay2 3.02 schematic
+expander:
+  chip: TCA9534
+  address: "0x20-0x27 (TCA9534) / 0x38-0x3F (TCA9534A); A2..A0 set by JP1..JP3, closed = 0"
+  wiring: parallel
+  int: not on HOST
+channels:
+  RL1: {type: relay_spdt, ap: AP0, bit: P0, active: low}   # K1
+  RL2: {type: relay_spdt, ap: AP1, bit: P1, active: low}   # K2
+  RL3: {type: relay_spdt, ap: AP2, bit: P2, active: low}   # K3
+  RL4: {type: relay_spdt, ap: AP3, bit: P3, active: low}   # K4
+unused: [AP4, AP5, AP6, AP7]   # passed to TCA9534 P4..P7 only
