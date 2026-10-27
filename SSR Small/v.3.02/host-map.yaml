@@ -1,0 +1,22 @@
+kind: module
+product: IoTextra SSR Small
+revision: "3.02"
+# Channel -> HOST line (AP0..AP7) and/or TCA9534 port bit
+# active: level on the HOST line / expander bit that means "input active" or "output on"
+# expander parallel: P0..P7 are wired to the same nets as AP0..AP7 (I2C optional).
+#   In I2C mode the MCU must leave those AP lines as inputs (high-Z); TCA9534 powers up with all ports as inputs.
+# Source: IoTextra SSR Small 3.02 schematic
+expander:
+  chip: TCA9534
+  address: "0x20-0x27 (TCA9534) / 0x38-0x3F (TCA9534A); A2..A0 set by SW1, ON = 0"
+  wiring: parallel
+  int: not on HOST
+channels:
+  RL1: {type: ssr, ap: AP0, bit: P0, active: low}   # DO1
+  RL2: {type: ssr, ap: AP1, bit: P1, active: low}   # DO2
+  RL3: {type: ssr, ap: AP2, bit: P2, active: low}   # DO3
+  RL4: {type: ssr, ap: AP3, bit: P3, active: low}   # DO4
+  RL5: {type: ssr, ap: AP4, bit: P4, active: low}   # DO5
+  RL6: {type: ssr, ap: AP5, bit: P5, active: low}   # DO6
+  RL7: {type: ssr, ap: AP6, bit: P6, active: low}   # DO7
+  RL8: {type: ssr, ap: AP7, bit: P7, active: low}   # DO8
