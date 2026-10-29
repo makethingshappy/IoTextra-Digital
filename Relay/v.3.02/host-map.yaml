@@ -1,0 +1,25 @@
+kind: module
+product: IoTextra Relay
+revision: "3.02"
+# Channel -> HOST line (AP0..AP7) and/or TCA9534 port bit
+# active: level on the HOST line that means "output on"
+# Source: IoTextra Relay 3.02 schematic
+# SPST relays RS1..RS4: direct from HOST.
+# Latching DPDT relays RL1..RL4: only via I2C. TCA9534 drives DRV8837 H-bridges (IN1/IN2);
+#   HOST AP5 = common nSLEEP of all four DRV8837 (high = enabled).
+#   Coil pulse direction: IN1=1, IN2=0 -> OUT1>OUT2; IN1=0, IN2=1 -> reverse; which direction is "set" to be confirmed on hardware.
+expander:
+  chip: TCA9534
+  address: "0x20-0x27 (TCA9534) / 0x38-0x3F (TCA9534A); A2..A0 set by SB1..SB3, closed = 0"
+  wiring: dedicated       # P0..P7 drive DRV8837 only, not on HOST
+  int: not on HOST
+channels:
+  RS1: {type: relay_spst, ap: AP0, active: low}
+  RS2: {type: relay_spst, ap: AP1, active: low}
+  RS3: {type: relay_spst, ap: AP2, active: low}
+  RS4: {type: relay_spst, ap: AP3, active: low}
+  RL1: {type: relay_latching, IN1: P1, IN2: P0, enable: AP5}
+  RL2: {type: relay_latching, IN1: P3, IN2: P2, enable: AP5}
+  RL3: {type: relay_latching, IN1: P5, IN2: P4, enable: AP5}
+  RL4: {type: relay_latching, IN1: P7, IN2: P6, enable: AP5}
+unused: [AP4, AP6, AP7]   # not connected on the module
