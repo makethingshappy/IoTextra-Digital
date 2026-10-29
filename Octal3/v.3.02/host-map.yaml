@@ -1,0 +1,25 @@
+kind: module
+product: IoTextra Octal3
+revision: "3.02"
+# Channel -> HOST line (AP0..AP7) and/or TCA9534 port bit
+# active: level on the HOST line that means "input active"
+# Source: IoTextra Octal3 3.02 schematic
+# Latching DPDT relays K1..K4: only via I2C. TCA9534 drives DRV8837 H-bridges (IN1/IN2);
+#   HOST AP5 = common nSLEEP of all four DRV8837 (10k pull-down on module: disabled by default, high = enabled).
+#   Pole 1 -> terminals K-COM/K-NO; pole 2 drives the status LED (no state readback to MCU).
+#   Coil pulse direction: IN1=1, IN2=0 -> OUT1>OUT2; IN1=0, IN2=1 -> reverse; which direction is "set" to be confirmed on hardware.
+expander:
+  chip: TCA9534
+  address: "0x20-0x27 (TCA9534) / 0x38-0x3F (TCA9534A); A2..A0 set by SW1, ON = 0"
+  wiring: dedicated       # P0..P7 drive DRV8837 only, not on HOST
+  int: {host: AP4}        # HOST AP4 position = TCA9534 INT, direct
+channels:
+  IN1: {type: DI, ap: AP0, active: low}
+  IN2: {type: DI, ap: AP1, active: low}
+  IN3: {type: DI, ap: AP2, active: low}
+  IN4: {type: DI, ap: AP3, active: low}
+  K1: {type: relay_latching, IN1: P1, IN2: P0, enable: AP5}
+  K2: {type: relay_latching, IN1: P3, IN2: P2, enable: AP5}
+  K3: {type: relay_latching, IN1: P5, IN2: P4, enable: AP5}
+  K4: {type: relay_latching, IN1: P7, IN2: P6, enable: AP5}
+unused: [AP6, AP7]   # not connected on the module
