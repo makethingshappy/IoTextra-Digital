@@ -85,6 +85,16 @@ Typical usage includes:
 - Triggering MQTT events or Node-RED flows  
 - Following IoTflow's MQTT topic conventions for automation
 
+### Software options
+
+The same hardware works with three software paths:
+
+- **[IoTflow](https://github.com/makethingshappy/IoTflow)** — MicroPython firmware, MQTT and Node-RED automation
+- **[MTH for Tasmota](https://github.com/makethingshappy/IoThome)** (formerly IoThome) — Tasmota templates and Berry drivers for ESP32-based boards
+- **[MTH for ESPHome](https://github.com/makethingshappy/MTH-for-ESPHome)** — ready-to-flash ESPHome configurations for ESP32-based boards
+
+Which carrier boards and IoTextra modules are supported by which software is shown in the [compatibility tables](https://github.com/makethingshappy#readme).
+
 ---
 
 ## Examples
