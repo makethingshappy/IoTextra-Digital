@@ -1,0 +1,372 @@
+name: Docs Sync
+
+# Publishes datasheet / schematic links for one IoTextra module:
+#   1. finds the hardware revisions currently on sale (from Shopify variant SKUs),
+#   2. uploads the revision PDFs from this repo to Shopify Files (PDF Title metadata set),
+#   3. points the permanent short codes /d<code> and /s<code> to those files
+#      (codes are never deleted or renamed, only their target changes),
+#   4. writes a <!-- DOCS_START/END --> block into the product card and the module README.
+#
+# Manual start only. With "apply" unchecked (default) it is a DRY RUN:
+# nothing is changed, the planned card HTML / README / redirects are shown
+# in the run summary and saved as an artifact.
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: 'Module folder (= Short Name), e.g. Relay2'
+        type: string
+        default: 'Relay2'
+      apply:
+        description: 'Apply changes (unchecked = dry run, nothing is changed)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: shopify-product-sync
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pip install pikepdf requests
+
+      - name: Docs sync
+        env:
+          SHOPIFY_CLIENT_ID: ${{ secrets.SHOPIFY_CLIENT_ID }}
+          SHOPIFY_CLIENT_SECRET: ${{ secrets.SHOPIFY_CLIENT_SECRET }}
+          GH_TOKEN: ${{ secrets.MTH_SYNC_TOKEN }}
+          REPO: ${{ github.repository }}
+          MODULE: ${{ inputs.module }}
+          APPLY: ${{ inputs.apply }}
+        run: |
+          python3 << 'PYEOF'
+          import os, re, glob, json, time, base64, hashlib, urllib.parse
+          import requests, pikepdf
+
+          SHOP = '55b706-7c.myshopify.com'
+          STORE = 'https://makethingshappy.io'
+          API = '2026-10'
+          REPO = os.environ['REPO']
+          MODULE = os.environ['MODULE'].strip()
+          APPLY = os.environ['APPLY'].lower() == 'true'
+          GH_TOKEN = os.environ['GH_TOKEN']
+          OUT = 'docs-sync-out'
+          os.makedirs(OUT, exist_ok=True)
+          summary = []
+
+          def log(s=''):
+              print(s)
+              summary.append(s)
+
+          def save(name, text):
+              with open(os.path.join(OUT, name), 'w', encoding='utf-8') as f:
+                  f.write(text)
+
+          log(f"## Docs Sync — module `{MODULE}` — {'APPLY' if APPLY else 'DRY RUN (nothing changed)'}")
+
+          # ---------- Shopify auth ----------
+          r = requests.post(f'https://{SHOP}/admin/oauth/access_token', data={
+              'grant_type': 'client_credentials',
+              'client_id': os.environ['SHOPIFY_CLIENT_ID'],
+              'client_secret': os.environ['SHOPIFY_CLIENT_SECRET'],
+          }, timeout=60)
+          r.raise_for_status()
+          tok = r.json()
+          TOKEN = tok['access_token']
+          scopes = set((tok.get('scope') or '').split(','))
+          log(f"Token scopes: `{tok.get('scope')}`")
+          need = {'write_products', 'write_files', 'write_online_store_navigation'}
+          if not need <= scopes:
+              raise SystemExit(f"ERROR: missing scopes {sorted(need - scopes)} — approve them for the app in Shopify first.")
+
+          def gql(query, variables=None):
+              r = requests.post(f'https://{SHOP}/admin/api/{API}/graphql.json',
+                                json={'query': query, 'variables': variables or {}},
+                                headers={'X-Shopify-Access-Token': TOKEN}, timeout=120)
+              r.raise_for_status()
+              j = r.json()
+              if j.get('errors'):
+                  raise SystemExit(f"GraphQL error: {j['errors']}")
+              return j['data']
+
+          def user_errors(payload, what):
+              errs = payload.get('userErrors') or []
+              if errs:
+                  raise SystemExit(f"ERROR in {what}: {errs}")
+
+          def url_ok(url):
+              try:
+                  r = requests.head(url, allow_redirects=True, timeout=60)
+                  if r.status_code == 405:
+                      r = requests.get(url, allow_redirects=True, timeout=60, stream=True)
+                  return r.status_code == 200
+              except requests.RequestException:
+                  return False
+
+          # ---------- product ----------
+          data = gql('''query($q:String!){ products(first:50, query:$q){ nodes{
+              id handle title status descriptionHtml
+              variants(first:100){ nodes{ sku } } } } }''',
+              {'q': f'title:*IoTextra* status:active'})
+          products = [p for p in data['products']['nodes']
+                      if p['status'] == 'ACTIVE' and p['title'].strip().endswith(f'IoTextra {MODULE}')]
+          if len(products) != 1:
+              raise SystemExit(f"ERROR: expected exactly 1 active product ending with 'IoTextra {MODULE}', found {[p['title'] for p in products]}")
+          product = products[0]
+          log(f"Product: **{product['title']}** (`/products/{product['handle']}`)")
+
+          # ---------- revisions on sale (from SKUs) ----------
+          revs = {}
+          for v in product['variants']['nodes']:
+              sku = (v['sku'] or '').strip()
+              if len(sku) >= 9 and sku[:9].isdigit():
+                  revs.setdefault(sku[:9], []).append(sku)
+              else:
+                  log(f"WARNING: variant SKU `{sku}` has no product/revision code — ignored")
+          if not revs:
+              raise SystemExit("ERROR: no SKU with a product/revision code — nothing to publish")
+          if len({c[:6] for c in revs}) != 1:
+              raise SystemExit(f"ERROR: SKUs of this product carry different product codes: {sorted(revs)}")
+          log(f"Revisions on sale (from SKUs): {', '.join(c[6:9] for c in sorted(revs))}")
+
+          # ---------- redirects helpers ----------
+          def get_redirect(path):
+              d = gql('''query($q:String!){ urlRedirects(first:10, query:$q){ nodes{ id path target } } }''',
+                      {'q': f'path:{path}'})
+              for n in d['urlRedirects']['nodes']:
+                  if n['path'] == path:
+                      return n
+              return None
+
+          redirect_log = []
+
+          def set_redirect(path, target):
+              cur = get_redirect(path)
+              redirect_log.append({'path': path, 'old_target': cur['target'] if cur else None, 'new_target': target})
+              if cur and cur['target'] == target:
+                  log(f"- `{path}` already → {target}")
+                  return
+              log(f"- `{path}`: {cur['target'] if cur else '(none)'} → {target}")
+              if not APPLY:
+                  return
+              if cur:
+                  p = gql('''mutation($id:ID!,$r:UrlRedirectInput!){ urlRedirectUpdate(id:$id, urlRedirect:$r){
+                             urlRedirect{ id } userErrors{ field message } } }''',
+                          {'id': cur['id'], 'r': {'target': target}})['urlRedirectUpdate']
+              else:
+                  p = gql('''mutation($r:UrlRedirectInput!){ urlRedirectCreate(urlRedirect:$r){
+                             urlRedirect{ id } userErrors{ field message } } }''',
+                          {'r': {'path': path, 'target': target}})['urlRedirectCreate']
+              user_errors(p, f'redirect {path}')
+
+          # ---------- file upload helper ----------
+          def upload_pdf(src, shop_name, title, subject):
+              tmp = os.path.join(OUT, shop_name)
+              with pikepdf.open(src) as pdf:
+                  pdf.docinfo['/Title'] = title
+                  pdf.docinfo['/Author'] = 'Make Things Happy'
+                  pdf.docinfo['/Subject'] = subject
+                  with pdf.open_metadata(set_pikepdf_as_editor=False) as meta:
+                      meta['dc:title'] = title
+                      meta['dc:creator'] = ['Make Things Happy']
+                      meta['dc:description'] = subject
+                  pdf.Root.ViewerPreferences = pikepdf.Dictionary(DisplayDocTitle=True)
+                  pdf.save(tmp)
+              if not APPLY:
+                  log(f"- would upload `{os.path.relpath(src)}` as `{shop_name}` (Title: “{title}”)")
+                  return None
+              size = os.path.getsize(tmp)
+              st = gql('''mutation($i:[StagedUploadInput!]!){ stagedUploadsCreate(input:$i){
+                          stagedTargets{ url resourceUrl parameters{ name value } } userErrors{ field message } } }''',
+                       {'i': [{'resource': 'FILE', 'filename': shop_name, 'mimeType': 'application/pdf',
+                               'httpMethod': 'POST', 'fileSize': str(size)}]})['stagedUploadsCreate']
+              user_errors(st, 'stagedUploadsCreate')
+              t = st['stagedTargets'][0]
+              with open(tmp, 'rb') as f:
+                  r = requests.post(t['url'], data={p['name']: p['value'] for p in t['parameters']},
+                                    files={'file': (shop_name, f, 'application/pdf')}, timeout=300)
+              if r.status_code not in (200, 201, 204):
+                  raise SystemExit(f"ERROR: staged upload failed {r.status_code}: {r.text[:300]}")
+              fc = gql('''mutation($f:[FileCreateInput!]!){ fileCreate(files:$f){
+                          files{ id } userErrors{ field message } } }''',
+                       {'f': [{'originalSource': t['resourceUrl'], 'filename': shop_name, 'contentType': 'FILE',
+                               'duplicateResolutionMode': 'REPLACE', 'alt': title}]})['fileCreate']
+              user_errors(fc, 'fileCreate')
+              fid = fc['files'][0]['id']
+              for _ in range(60):
+                  n = gql('''query($id:ID!){ node(id:$id){ ... on GenericFile{ fileStatus url } } }''', {'id': fid})['node']
+                  if n and n.get('fileStatus') == 'READY' and n.get('url'):
+                      cdn = n['url']
+                      break
+                  if n and n.get('fileStatus') == 'FAILED':
+                      raise SystemExit(f"ERROR: Shopify could not process {shop_name}")
+                  time.sleep(3)
+              else:
+                  raise SystemExit(f"ERROR: {shop_name} not READY in time")
+              # Prefer the store-domain address, so the PDF counts for makethingshappy.io.
+              store_url = f"{STORE}/cdn/shop/files/{cdn.split('/files/', 1)[1].split('?', 1)[0]}"
+              if url_ok(store_url):
+                  log(f"- uploaded `{shop_name}` → {store_url}")
+                  return store_url
+              log(f"- WARNING: store-domain address not reachable, using CDN: {cdn}")
+              if not url_ok(cdn):
+                  raise SystemExit(f"ERROR: uploaded file not reachable: {cdn}")
+              return cdn
+
+          def pick(paths, what, rev_dir):
+              paths = sorted(paths)
+              if not paths:
+                  log(f"WARNING: no {what} found in `{rev_dir}`")
+                  return None
+              if len(paths) > 1:
+                  log(f"WARNING: several {what} files in `{rev_dir}`, using `{os.path.basename(paths[0])}`")
+              return paths[0]
+
+          def find_files(folder, pattern_re):
+              return [p for p in glob.glob(os.path.join(folder, '*')) if re.search(pattern_re, os.path.basename(p), re.I)]
+
+          # ---------- per revision ----------
+          entries = []   # (rev_label, [(text, url)])
+          short = f'IoTextra {MODULE}'
+          safe = MODULE.replace(' ', '-')
+          for code in sorted(revs):
+              vvv = code[6:9]
+              rev = f'{vvv[0]}-{vvv[1:]}'          # 3-02
+              dotted = f'{vvv[0]}.{vvv[1:]}'       # 3.02
+              rev_dir = next((d for d in (f'{MODULE}/v{dotted}', f'{MODULE}/v.{dotted}') if os.path.isdir(d)), None)
+              log(f"\n### Rev. {rev} (code `{code}`, variants: {', '.join(revs[code])})")
+              if not rev_dir:
+                  log(f"WARNING: no folder `{MODULE}/v{dotted}` or `{MODULE}/v.{dotted}` in the repo — skipped")
+                  continue
+              links = []
+              ds = pick(find_files(f'{rev_dir}/docs', r'datasheet.*\.pdf$'), 'datasheet PDF', f'{rev_dir}/docs')
+              sc = pick(find_files(f'{rev_dir}/hardware', r'schematic.*\.pdf$'), 'schematic PDF', f'{rev_dir}/hardware')
+              stp = pick(find_files(f'{rev_dir}/hardware', r'\.ste?p$'), 'STEP model', f'{rev_dir}/hardware') if find_files(f'{rev_dir}/hardware', r'\.ste?p$') else None
+
+              for src, kind, letter in ((ds, 'Datasheet', 'd'), (sc, 'Schematic', 's')):
+                  if not src:
+                      continue
+                  title = f'{short} {kind}, Rev. {rev}'
+                  url = upload_pdf(src, f'IoTextra-{safe}-{kind}-Rev{rev}.pdf', title, product['title'])
+                  path = f'/{letter}{code}'
+                  if APPLY:
+                      set_redirect(path, url)
+                  else:
+                      cur = get_redirect(path)
+                      redirect_log.append({'path': path, 'old_target': cur['target'] if cur else None, 'new_target': '(Shopify file URL after upload)'})
+                      log(f"- `{path}` currently → {cur['target'] if cur else '(none)'}; will point to the uploaded file")
+                  links.append((f'{title} (PDF)', f'{STORE}{path}'))
+
+              if stp:
+                  gh = f'https://github.com/{REPO}/blob/main/' + urllib.parse.quote(stp)
+                  links.append((f'{short} 3D model (STEP), Rev. {rev} — GitHub', gh))
+
+              gpath = f'/g{code}'
+              gtarget = f'https://github.com/{REPO}/tree/main/' + urllib.parse.quote(rev_dir)
+              if get_redirect(gpath) is None:
+                  set_redirect(gpath, gtarget)     # create only; an existing /g code is left untouched
+              links.append((f'{short} Rev. {rev} — GitHub', f'{STORE}{gpath}'))
+              entries.append((rev, links))
+
+          if not entries:
+              raise SystemExit("ERROR: nothing to publish")
+
+          # ---------- DOCS block for the product card ----------
+          def html_list(links):
+              return '<ul>\n' + '\n'.join(f'  <li><a href="{u}">{t}</a></li>' for t, u in links) + '\n</ul>'
+          parts = ['<div style="margin:12px 0">',
+                   '<p style="font-family:\'Roboto Condensed\',sans-serif;font-size:17px;font-weight:600;margin:0 0 6px">Documentation</p>']
+          if len(entries) == 1:
+              parts.append(html_list(entries[0][1]))
+          else:
+              for rev, links in entries:
+                  parts.append(f'<p style="margin:6px 0 2px"><strong>Rev. {rev}</strong></p>')
+                  parts.append(html_list(links))
+          parts.append('</div>')
+          docs_html = '\n'.join(parts)
+
+          body = product['descriptionHtml']
+          save('card_before.html', body)
+          block = f'<!-- DOCS_START -->\n{docs_html}\n<!-- DOCS_END -->'
+          if '<!-- DOCS_START -->' in body:
+              new_body = re.sub(r'<!-- DOCS_START -->.*?<!-- DOCS_END -->', lambda m: block, body, flags=re.S)
+          elif '<!-- MODES_END -->' in body:
+              new_body = body.replace('<!-- MODES_END -->', '<!-- MODES_END -->\n' + block, 1)
+          else:
+              new_body = body + '\n' + block
+          save('card_after.html', new_body)
+
+          # ---------- DOCS block for the README ----------
+          md = ['## Documentation', '']
+          for rev, links in entries:
+              if len(entries) > 1:
+                  md += [f'**Rev. {rev}**', '']
+              for t, u in links:
+                  md.append(f'- [{t}]({u})')
+              md.append('')
+          md.append(f'Product page: [{short} — buy at makethingshappy.io]({STORE}/products/{product["handle"]})')
+          readme_block = '<!-- DOCS_START -->\n' + '\n'.join(md) + '\n<!-- DOCS_END -->'
+
+          readme_path = f'{MODULE}/README.md'
+          with open(readme_path, encoding='utf-8') as f:
+              readme = f.read()
+          save('README_before.md', readme)
+          if '<!-- DOCS_START -->' in readme:
+              new_readme = re.sub(r'<!-- DOCS_START -->.*?<!-- DOCS_END -->', lambda m: readme_block, readme, flags=re.S)
+          elif re.search(r'^!\[software\]\([^)]*\)[ \t]*$', readme, re.M):
+              new_readme = re.sub(r'^(!\[software\]\([^)]*\))[ \t]*$', lambda m: m.group(1) + '\n\n' + readme_block, readme, count=1, flags=re.M)
+          elif '<!-- OVERVIEW_END -->' in readme:
+              new_readme = readme.replace('<!-- OVERVIEW_END -->', '<!-- OVERVIEW_END -->\n\n' + readme_block, 1)
+          else:
+              new_readme = readme_block + '\n\n' + readme
+          save('README_after.md', new_readme)
+          save('redirects.json', json.dumps(redirect_log, indent=2))
+
+          log('\n### Card DOCS block')
+          log('```html\n' + docs_html + '\n```')
+          log('### README DOCS block')
+          log('```markdown\n' + readme_block + '\n```')
+
+          # ---------- apply card + README ----------
+          if APPLY:
+              if new_body != body:
+                  p = gql('''mutation($p:ProductUpdateInput!){ productUpdate(product:$p){
+                             product{ id } userErrors{ field message } } }''',
+                          {'p': {'id': product['id'], 'descriptionHtml': new_body}})['productUpdate']
+                  user_errors(p, 'productUpdate')
+                  log('Product card updated.')
+              else:
+                  log('Product card already up to date.')
+              if new_readme != readme:
+                  h = {'Authorization': f'Bearer {GH_TOKEN}', 'Accept': 'application/vnd.github+json'}
+                  api = f'https://api.github.com/repos/{REPO}/contents/' + urllib.parse.quote(readme_path)
+                  sha = requests.get(api, headers=h, timeout=60).json()['sha']
+                  r = requests.put(api, headers=h, timeout=60, json={
+                      'message': f'Docs sync: documentation links for {MODULE}',
+                      'content': base64.b64encode(new_readme.encode('utf-8')).decode('ascii'),
+                      'sha': sha})
+                  r.raise_for_status()
+                  log('README committed.')
+              else:
+                  log('README already up to date.')
+          else:
+              log('\nDry run: no file uploaded, no redirect, card or README changed. See the artifact for full before/after.')
+
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as f:
+              f.write('\n'.join(summary) + '\n')
+          PYEOF
+
+      - name: Save before/after snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-sync-${{ inputs.module }}-${{ github.run_number }}
+          path: docs-sync-out/
+          if-no-files-found: ignore
