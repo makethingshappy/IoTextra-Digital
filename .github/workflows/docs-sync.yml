@@ -167,6 +167,41 @@ jobs:
               user_errors(p, f'redirect {path}')
 
           # ---------- file upload helper ----------
+          def find_file(name):
+              d = gql('''query($q:String!){ files(first:20, query:$q){ nodes{ id
+                          ... on GenericFile{ url originalFileSize fileStatus } } } }''',
+                      {'q': f'filename:{name}'})
+              for n in d['files']['nodes']:
+                  u = n.get('url') or ''
+                  if u.split('/files/', 1)[-1].split('?', 1)[0] == name:
+                      return n
+              return None
+
+          def wait_ready(fid, name):
+              for _ in range(60):
+                  n = gql('''query($id:ID!){ node(id:$id){ ... on GenericFile{ fileStatus url } } }''', {'id': fid})['node']
+                  if n and n.get('fileStatus') == 'READY' and n.get('url'):
+                      return n['url']
+                  if n and n.get('fileStatus') == 'FAILED':
+                      raise SystemExit(f"ERROR: Shopify could not process {name}")
+                  time.sleep(3)
+              raise SystemExit(f"ERROR: {name} not READY in time")
+
+          def stage(path, name):
+              size = os.path.getsize(path)
+              st = gql('''mutation($i:[StagedUploadInput!]!){ stagedUploadsCreate(input:$i){
+                          stagedTargets{ url resourceUrl parameters{ name value } } userErrors{ field message } } }''',
+                       {'i': [{'resource': 'FILE', 'filename': name, 'mimeType': 'application/pdf',
+                               'httpMethod': 'POST', 'fileSize': str(size)}]})['stagedUploadsCreate']
+              user_errors(st, 'stagedUploadsCreate')
+              t = st['stagedTargets'][0]
+              with open(path, 'rb') as f:
+                  r = requests.post(t['url'], data={p['name']: p['value'] for p in t['parameters']},
+                                    files={'file': (name, f, 'application/pdf')}, timeout=300)
+              if r.status_code not in (200, 201, 204):
+                  raise SystemExit(f"ERROR: staged upload failed {r.status_code}: {r.text[:300]}")
+              return t['resourceUrl']
+
           def upload_pdf(src, shop_name, title, subject):
               tmp = os.path.join(OUT, shop_name)
               with pikepdf.open(src) as pdf:
@@ -178,42 +213,37 @@ jobs:
                       meta['dc:creator'] = ['Make Things Happy']
                       meta['dc:description'] = subject
                   pdf.Root.ViewerPreferences = pikepdf.Dictionary(DisplayDocTitle=True)
-                  pdf.save(tmp)
-              if not APPLY:
-                  log(f"- would upload `{os.path.relpath(src)}` as `{shop_name}` (Title: “{title}”)")
-                  return None
+                  pdf.save(tmp, deterministic_id=True)
               size = os.path.getsize(tmp)
-              st = gql('''mutation($i:[StagedUploadInput!]!){ stagedUploadsCreate(input:$i){
-                          stagedTargets{ url resourceUrl parameters{ name value } } userErrors{ field message } } }''',
-                       {'i': [{'resource': 'FILE', 'filename': shop_name, 'mimeType': 'application/pdf',
-                               'httpMethod': 'POST', 'fileSize': str(size)}]})['stagedUploadsCreate']
-              user_errors(st, 'stagedUploadsCreate')
-              t = st['stagedTargets'][0]
-              with open(tmp, 'rb') as f:
-                  r = requests.post(t['url'], data={p['name']: p['value'] for p in t['parameters']},
-                                    files={'file': (shop_name, f, 'application/pdf')}, timeout=300)
-              if r.status_code not in (200, 201, 204):
-                  raise SystemExit(f"ERROR: staged upload failed {r.status_code}: {r.text[:300]}")
-              fc = gql('''mutation($f:[FileCreateInput!]!){ fileCreate(files:$f){
-                          files{ id } userErrors{ field message } } }''',
-                       {'f': [{'originalSource': t['resourceUrl'], 'filename': shop_name, 'contentType': 'FILE',
-                               'duplicateResolutionMode': 'REPLACE', 'alt': title}]})['fileCreate']
-              user_errors(fc, 'fileCreate')
-              fid = fc['files'][0]['id']
-              for _ in range(60):
-                  n = gql('''query($id:ID!){ node(id:$id){ ... on GenericFile{ fileStatus url } } }''', {'id': fid})['node']
-                  if n and n.get('fileStatus') == 'READY' and n.get('url'):
-                      cdn = n['url']
-                      break
-                  if n and n.get('fileStatus') == 'FAILED':
-                      raise SystemExit(f"ERROR: Shopify could not process {shop_name}")
-                  time.sleep(3)
+              existing = find_file(shop_name)
+              if not APPLY:
+                  state = 'new file' if not existing else ('unchanged, kept' if existing.get('originalFileSize') == size else 'content will be replaced, same URL')
+                  log(f"- would upload `{os.path.relpath(src)}` as `{shop_name}` (Title: “{title}”) — {state}")
+                  return None
+              if existing and existing.get('originalFileSize') == size:
+                  cdn = existing['url']
+                  log(f"- `{shop_name}` unchanged in Shopify Files, kept")
+              elif existing:
+                  res = stage(tmp, shop_name)
+                  fu = gql('''mutation($f:[FileUpdateInput!]!){ fileUpdate(files:$f){
+                              files{ id } userErrors{ field message } } }''',
+                           {'f': [{'id': existing['id'], 'originalSource': res, 'alt': title}]})['fileUpdate']
+                  user_errors(fu, 'fileUpdate')
+                  cdn = wait_ready(existing['id'], shop_name)
+                  log(f"- `{shop_name}` content replaced (same URL)")
               else:
-                  raise SystemExit(f"ERROR: {shop_name} not READY in time")
+                  res = stage(tmp, shop_name)
+                  fc = gql('''mutation($f:[FileCreateInput!]!){ fileCreate(files:$f){
+                              files{ id } userErrors{ field message } } }''',
+                           {'f': [{'originalSource': res, 'filename': shop_name, 'contentType': 'FILE',
+                                   'duplicateResolutionMode': 'RAISE_ERROR', 'alt': title}]})['fileCreate']
+                  user_errors(fc, 'fileCreate')
+                  cdn = wait_ready(fc['files'][0]['id'], shop_name)
+                  log(f"- `{shop_name}` uploaded")
               # Prefer the store-domain address, so the PDF counts for makethingshappy.io.
               store_url = f"{STORE}/cdn/shop/files/{cdn.split('/files/', 1)[1].split('?', 1)[0]}"
               if url_ok(store_url):
-                  log(f"- uploaded `{shop_name}` → {store_url}")
+                  log(f"  → {store_url}")
                   return store_url
               log(f"- WARNING: store-domain address not reachable, using CDN: {cdn}")
               if not url_ok(cdn):
