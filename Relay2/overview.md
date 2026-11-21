@@ -10,3 +10,4 @@ DIN-rail mounting: A 3D-printable DIN-rail mounting tray is available — <a hre
 
 Part of the IoTextra series · compatible with IoTsmart and IoTbase · <a href="https://github.com/makethingshappy/iotextra-digital/tree/main/Relay2">Open Hardware</a>
 (<a href="https://github.com/makethingshappy/iotextra-digital/blob/main/LICENSE_HARDWARE.md">CC BY-SA 4.0</a>)
+
