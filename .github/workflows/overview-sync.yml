@@ -20,6 +20,10 @@ env:
   # IoTsmart         -> iotsmart
   # IoTbase          -> iotbase
   SHOPIFY_COLLECTION_HANDLE: 'digital-iotextra'
+  # Family name that, followed by the module folder name, ends every product title
+  # in this repo ("4 SPDT Relays - IoTextra Relay2" -> 'IoTextra' + 'Relay2').
+  # IoTextra-* repos -> IoTextra ; IoTsmart -> IoTsmart ; IoTbase -> IoTbase
+  PRODUCT_FAMILY: 'IoTextra'
   # Left border stripe color for the overview block, per product family.
   # IoTextra (all families) -> #8f0000
   # IoTsmart                -> #22c55e
@@ -58,6 +62,7 @@ jobs:
           MODE: ${{ steps.changed.outputs.mode }}
           COLLECTION_HANDLE: ${{ env.SHOPIFY_COLLECTION_HANDLE }}
           STRIPE_COLOR: ${{ env.OVERVIEW_STRIPE_COLOR }}
+          PRODUCT_FAMILY: ${{ env.PRODUCT_FAMILY }}
         run: |
           python3 << 'PYEOF'
           import os, re, glob, json, base64
@@ -71,6 +76,7 @@ jobs:
           mode = os.environ['MODE']
           collection_handle = os.environ['COLLECTION_HANDLE']
           stripe_color = os.environ['STRIPE_COLOR']
+          product_family = os.environ['PRODUCT_FAMILY']
 
           token_data = urllib.parse.urlencode({
               'grant_type': 'client_credentials',
@@ -159,15 +165,20 @@ jobs:
           all_products.extend(result.get('products', []))
           print(f"Fetched {len(all_products)} product(s) from this collection")
 
-          def find_product_id(title):
+          def find_product_id(title, folder):
+              # Product titles in Shopify use the Full Name ("4 SPDT Relays - IoTextra Relay2"),
+              # overview.md uses the Mnemonic form ("4x SPDT - IoTextra Relay2").
+              # Both end with "<PRODUCT_FAMILY> <folder name>".
               t = title.strip()
               for p in all_products:
                   if p['title'].strip() == t:
                       return p['id']
-              for p in all_products:
-                  pt = p['title'].strip()
-                  if pt.startswith(t) and (len(pt) == len(t) or not pt[len(t)].isalnum()):
-                      return p['id']
+              suffix = f'{product_family} {folder}'
+              matches = [p for p in all_products if p['title'].strip().endswith(suffix)]
+              if len(matches) == 1:
+                  return matches[0]['id']
+              if len(matches) > 1:
+                  print(f"  WARNING: several products end with {suffix!r}: {[p['title'] for p in matches]}")
               return None
 
           summary_rows = []
@@ -187,7 +198,7 @@ jobs:
               logo_file = os.path.basename(logo_candidates[0]) if logo_candidates else None
               print(f"  Title: {title!r} | Badge file: {logo_file or '(none — no software badges yet)'}")
 
-              product_id = find_product_id(title)
+              product_id = find_product_id(title, folder)
               if not product_id:
                   print(f"  SKIP: no matching Shopify product found for title {title!r}")
                   summary_rows.append((folder, title, "no", "-", "-"))
