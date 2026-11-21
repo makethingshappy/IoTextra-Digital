@@ -52,6 +52,7 @@ jobs:
 
           SHOP = '55b706-7c.myshopify.com'
           STORE = 'https://makethingshappy.io'
+          CDN_FILES = 'https://cdn.shopify.com/s/files/1/0860/7481/8846/files'
           API = '2026-10'
           REPO = os.environ['REPO']
           MODULE = os.environ['MODULE'].strip()
@@ -173,13 +174,31 @@ jobs:
 
           # ---------- file upload helper ----------
           def find_file(name):
-              d = gql('''query($q:String!){ files(first:20, query:$q){ nodes{ id
-                          ... on GenericFile{ url originalFileSize fileStatus } } } }''',
-                      {'q': f'filename:{name}'})
-              for n in d['files']['nodes']:
-                  u = n.get('url') or ''
-                  if u.split('/files/', 1)[-1].split('?', 1)[0] == name:
+              """Exact-name lookup in Shopify Files. Search first; if search finds nothing
+              (its index can lag or tokenise names differently), scan the file list."""
+              def match(nodes):
+                  for n in nodes:
+                      u = n.get('url') or ''
+                      if u.split('/files/', 1)[-1].split('?', 1)[0] == name:
+                          return n
+                  return None
+              q = '''query($q:String!,$after:String){ files(first:100, after:$after, query:$q){
+                       pageInfo{ hasNextPage endCursor }
+                       nodes{ id ... on GenericFile{ url originalFileSize fileStatus } } } }'''
+              for query in (f'filename:{name}', f'filename:"{name}"'):
+                  n = match(gql(q, {'q': query, 'after': None})['files']['nodes'])
+                  if n:
                       return n
+              after = None
+              for _ in range(10):
+                  d = gql(q, {'q': 'media_type:GenericFile', 'after': after})['files']
+                  n = match(d['nodes'])
+                  if n:
+                      log(f"  (`{name}` found by scanning the file list)")
+                      return n
+                  if not d['pageInfo']['hasNextPage']:
+                      break
+                  after = d['pageInfo']['endCursor']
               return None
 
           def wait_ready(fid, name):
@@ -242,9 +261,15 @@ jobs:
                               files{ id } userErrors{ field message } } }''',
                            {'f': [{'originalSource': res, 'filename': shop_name, 'contentType': 'FILE',
                                    'duplicateResolutionMode': 'RAISE_ERROR', 'alt': title}]})['fileCreate']
-                  user_errors(fc, 'fileCreate')
-                  cdn = wait_ready(fc['files'][0]['id'], shop_name)
-                  log(f"- `{shop_name}` uploaded")
+                  errs = fc.get('userErrors') or []
+                  if errs and all('already exists' in (e.get('message') or '') for e in errs):
+                      # The file is there but could not be looked up; keep it as it is.
+                      cdn = f'{CDN_FILES}/{shop_name}'
+                      log(f"- WARNING: `{shop_name}` already exists in Shopify Files but could not be looked up; kept unchanged")
+                  else:
+                      user_errors(fc, 'fileCreate')
+                      cdn = wait_ready(fc['files'][0]['id'], shop_name)
+                      log(f"- `{shop_name}` uploaded")
               # The file must be reachable on Shopify's CDN.
               if not url_ok(cdn):
                   raise SystemExit(f"ERROR: uploaded file not reachable: {cdn}")
