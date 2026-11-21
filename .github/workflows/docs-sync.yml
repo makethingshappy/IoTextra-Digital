@@ -269,8 +269,21 @@ jobs:
           def find_files(folder, pattern_re):
               return [p for p in glob.glob(os.path.join(folder, '*')) if re.search(pattern_re, os.path.basename(p), re.I)]
 
+          # ---------- document types ----------
+          # One line per kind of document shown under "Links". To add a new kind
+          # (e.g. a wiring diagram), add a line here; nothing else needs to change.
+          #   folder  : sub-folder of the revision folder        pattern : file name regex
+          #   host    : 'shopify' = uploaded to Shopify Files, reached via short code <code><SKU9>
+          #             'github'  = linked to the file on GitHub
+          DOC_TYPES = [
+              {'key': 'pdf',       'label': 'Datasheet', 'icon': '📄', 'folder': 'docs',     'pattern': r'datasheet.*\.pdf$',            'host': 'shopify', 'code': 'd', 'expected': True},
+              {'key': 'schematic', 'label': 'Schematic', 'icon': '📐', 'folder': 'hardware', 'pattern': r'schematic.*\.pdf$',           'host': 'shopify', 'code': 's', 'expected': True},
+              {'key': 'pinout',    'label': 'Pinout',    'icon': '📌', 'folder': 'docs',     'pattern': r'pinout.*\.(png|jpe?g|pdf)$', 'host': 'github',  'ext': 'image'},
+              {'key': 'step',      'label': '3D model',  'icon': '🧊', 'folder': 'hardware', 'pattern': r'\.ste?p$',                    'host': 'github',  'ext': 'STEP'},
+          ]
+
           # ---------- per revision ----------
-          entries = []   # (rev_label, [(text, url)])
+          entries = []   # (rev_label, [(text, url, icon)])
           short = f'IoTextra {MODULE}'
           safe = MODULE.replace(' ', '-')
           for code in sorted(revs):
@@ -283,51 +296,58 @@ jobs:
                   log(f"WARNING: no folder `{MODULE}/v{dotted}` or `{MODULE}/v.{dotted}` in the repo — skipped")
                   continue
               links = []
-              ds = pick(find_files(f'{rev_dir}/docs', r'datasheet.*\.pdf$'), 'datasheet PDF', f'{rev_dir}/docs')
-              sc = pick(find_files(f'{rev_dir}/hardware', r'schematic.*\.pdf$'), 'schematic PDF', f'{rev_dir}/hardware')
-              stp = pick(find_files(f'{rev_dir}/hardware', r'\.ste?p$'), 'STEP model', f'{rev_dir}/hardware') if find_files(f'{rev_dir}/hardware', r'\.ste?p$') else None
-
-              for src, kind, letter in ((ds, 'Datasheet', 'd'), (sc, 'Schematic', 's')):
-                  if not src:
+              for t in DOC_TYPES:
+                  folder = f"{rev_dir}/{t['folder']}"
+                  found = find_files(folder, t['pattern'])
+                  if not found:
+                      if t.get('expected'):
+                          log(f"WARNING: no {t['label']} found in `{folder}`")
                       continue
-                  title = f'{short} {kind}, Rev. {rev}'
-                  url = upload_pdf(src, f'IoTextra-{safe}-{kind}-Rev{rev}.pdf', title, product['title'])
-                  path = f'/{letter}{code}'
-                  if APPLY:
-                      set_redirect(path, url)
+                  src = pick(found, t['label'], folder)
+                  text = f"{short} {t['label']}, Rev. {rev}"
+                  if t['host'] == 'shopify':
+                      url = upload_pdf(src, f"IoTextra-{safe}-{t['label'].replace(' ', '-')}-Rev{rev}.pdf", text, product['title'])
+                      path = f"/{t['code']}{code}"
+                      if APPLY:
+                          set_redirect(path, url)
+                      else:
+                          cur = get_redirect(path)
+                          redirect_log.append({'path': path, 'old_target': cur['target'] if cur else None, 'new_target': '(Shopify file URL after upload)'})
+                          log(f"- `{path}` currently → {cur['target'] if cur else '(none)'}; will point to the uploaded file")
+                      links.append((f'{text} (PDF)', f'{STORE}{path}', t['key']))
                   else:
-                      cur = get_redirect(path)
-                      redirect_log.append({'path': path, 'old_target': cur['target'] if cur else None, 'new_target': '(Shopify file URL after upload)'})
-                      log(f"- `{path}` currently → {cur['target'] if cur else '(none)'}; will point to the uploaded file")
-                  links.append((f'{title} (PDF)', f'{STORE}{path}'))
-
-              if stp:
-                  gh = f'https://github.com/{REPO}/blob/main/' + urllib.parse.quote(stp)
-                  links.append((f'{short} 3D model (STEP), Rev. {rev} — GitHub', gh))
+                      gh = f'https://github.com/{REPO}/blob/main/' + urllib.parse.quote(src)
+                      links.append((f"{text} ({t['ext']}) — GitHub", gh, t['key']))
 
               gpath = f'/g{code}'
               gtarget = f'https://github.com/{REPO}/tree/main/' + urllib.parse.quote(rev_dir)
               if get_redirect(gpath) is None:
                   set_redirect(gpath, gtarget)     # create only; an existing /g code is left untouched
-              links.append((f'{short} Rev. {rev} — GitHub', f'{STORE}{gpath}'))
+              links.append((f'{short} Rev. {rev} — GitHub', f'{STORE}{gpath}', 'github'))
               entries.append((rev, links))
 
           if not entries:
               raise SystemExit("ERROR: nothing to publish")
 
           # ---------- DOCS block for the product card ----------
-          def html_list(links):
-              return '<ul>\n' + '\n'.join(f'  <li><a href="{u}">{t}</a></li>' for t, u in links) + '\n</ul>'
-          parts = ['<div style="margin:12px 0">',
-                   '<p style="font-family:\'Roboto Condensed\',sans-serif;font-size:17px;font-weight:600;margin:0 0 6px">Documentation</p>']
-          if len(entries) == 1:
-              parts.append(html_list(entries[0][1]))
-          else:
-              for rev, links in entries:
-                  parts.append(f'<p style="margin:6px 0 2px"><strong>Rev. {rev}</strong></p>')
-                  parts.append(html_list(links))
-          parts.append('</div>')
-          docs_html = '\n'.join(parts)
+          # Same look as the hand-written "Operation Modes" block: a bold title, then light
+          # cards with an emoji icon, a short label and the descriptive link. Any number of
+          # cards; they wrap on narrow screens.
+          ICON = {t['key']: t['icon'] for t in DOC_TYPES}
+          ICON['github'] = '💻'
+          LABEL = {t['key']: t['label'] for t in DOC_TYPES}
+          LABEL['github'] = 'GitHub'
+          FONT = "font-family: 'Roboto Condensed',sans-serif; font-size: 15px; color: #333333;"
+
+          def card(text, url, kind):
+              return (f'<div style="flex: 1; min-width: 200px; background: #f7f9fc; border-radius: 8px; padding: 16px; {FONT}">\n'
+                      f'<div style="font-size: 18px; margin-bottom: 6px;">{ICON[kind]} <strong>{LABEL[kind]}</strong>\n</div>\n'
+                      f'<a href="{url}" target="_blank">{text}</a></div>')
+
+          all_links = [l for _, links in entries for l in links]
+          docs_html = (f'<p style="{FONT} line-height: 1.5;"><strong>Links</strong></p>\n'
+                       '<div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">\n'
+                       + '\n'.join(card(t, u, k) for t, u, k in all_links) + '\n</div>')
 
           body = product['descriptionHtml']
           save('card_before.html', body)
@@ -337,7 +357,7 @@ jobs:
           elif '<!-- MODES_END -->' in body:
               new_body = body.replace('<!-- MODES_END -->', '<!-- MODES_END -->\n' + block, 1)
           else:
-              new_body = body + '\n' + block
+              new_body = body.rstrip() + '\n' + block
           save('card_after.html', new_body)
 
           # ---------- DOCS block for the README ----------
@@ -345,7 +365,7 @@ jobs:
           for rev, links in entries:
               if len(entries) > 1:
                   md += [f'**Rev. {rev}**', '']
-              for t, u in links:
+              for t, u, _ in links:
                   md.append(f'- [{t}]({u})')
               md.append('')
           md.append(f'Product page: [{short} — buy at makethingshappy.io]({STORE}/products/{product["handle"]})')
