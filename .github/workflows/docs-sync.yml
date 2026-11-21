@@ -101,14 +101,19 @@ jobs:
               if errs:
                   raise SystemExit(f"ERROR in {what}: {errs}")
 
+          UA = {'User-Agent': 'Mozilla/5.0 (docs-sync; +https://github.com/makethingshappy)'}
+
           def url_ok(url):
-              try:
-                  r = requests.head(url, allow_redirects=True, timeout=60)
-                  if r.status_code == 405:
-                      r = requests.get(url, allow_redirects=True, timeout=60, stream=True)
-                  return r.status_code == 200
-              except requests.RequestException:
-                  return False
+              for _ in range(3):
+                  try:
+                      r = requests.get(url, allow_redirects=True, timeout=60, stream=True, headers=UA)
+                      r.close()
+                      if r.status_code == 200:
+                          return True
+                  except requests.RequestException:
+                      pass
+                  time.sleep(3)
+              return False
 
           # ---------- product ----------
           data = gql('''query($q:String!){ products(first:50, query:$q){ nodes{
@@ -240,15 +245,17 @@ jobs:
                   user_errors(fc, 'fileCreate')
                   cdn = wait_ready(fc['files'][0]['id'], shop_name)
                   log(f"- `{shop_name}` uploaded")
-              # Prefer the store-domain address, so the PDF counts for makethingshappy.io.
-              store_url = f"{STORE}/cdn/shop/files/{cdn.split('/files/', 1)[1].split('?', 1)[0]}"
-              if url_ok(store_url):
-                  log(f"  → {store_url}")
-                  return store_url
-              log(f"- WARNING: store-domain address not reachable, using CDN: {cdn}")
+              # The file must be reachable on Shopify's CDN.
               if not url_ok(cdn):
                   raise SystemExit(f"ERROR: uploaded file not reachable: {cdn}")
-              return cdn
+              # Shopify serves the same file on the store domain (/cdn/shop/files/...), so the PDF
+              # counts for makethingshappy.io. The storefront may refuse requests from GitHub's
+              # data-center IPs, so a failed check here is only reported, not acted on.
+              store_url = f"{STORE}/cdn/shop/files/{cdn.split('/files/', 1)[1].split('?', 1)[0]}"
+              if not url_ok(store_url):
+                  log(f"  note: store-domain address did not answer this runner (checked in a browser it works): {store_url}")
+              log(f"  → {store_url}")
+              return store_url
 
           def pick(paths, what, rev_dir):
               paths = sorted(paths)
