@@ -179,7 +179,7 @@ jobs:
               def match(nodes):
                   for n in nodes:
                       u = n.get('url') or ''
-                      if u.split('/files/', 1)[-1].split('?', 1)[0] == name:
+                      if u.split('?', 1)[0].rsplit('/', 1)[-1] == name:
                           return n
                   return None
               q = '''query($q:String!,$after:String){ files(first:100, after:$after, query:$q){
@@ -190,8 +190,10 @@ jobs:
                   if n:
                       return n
               after = None
+              seen = 0
               for _ in range(10):
                   d = gql(q, {'q': 'media_type:GenericFile', 'after': after})['files']
+                  seen += len(d['nodes'])
                   n = match(d['nodes'])
                   if n:
                       log(f"  (`{name}` found by scanning the file list)")
@@ -199,6 +201,7 @@ jobs:
                   if not d['pageInfo']['hasNextPage']:
                       break
                   after = d['pageInfo']['endCursor']
+              log(f"  (lookup of `{name}`: not found; this token sees {seen} files in Shopify Files)")
               return None
 
           def wait_ready(fid, name):
@@ -276,7 +279,7 @@ jobs:
               # Shopify serves the same file on the store domain (/cdn/shop/files/...), so the PDF
               # counts for makethingshappy.io. The storefront may refuse requests from GitHub's
               # data-center IPs, so a failed check here is only reported, not acted on.
-              store_url = f"{STORE}/cdn/shop/files/{cdn.split('/files/', 1)[1].split('?', 1)[0]}"
+              store_url = f"{STORE}/cdn/shop/files/{cdn.split('?', 1)[0].rsplit('/files/', 1)[1]}"
               if not url_ok(store_url):
                   log(f"  note: store-domain address did not answer this runner (checked in a browser it works): {store_url}")
               log(f"  → {store_url}")
