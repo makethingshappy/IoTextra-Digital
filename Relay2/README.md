@@ -11,7 +11,7 @@
 >
 > Part of the IoTextra series · compatible with IoTsmart and IoTbase · <a href="https://github.com/makethingshappy/iotextra-digital/tree/main/Relay2">Open Hardware</a>
 >
-> (<a href="https://github.com/makethingshappy/iotextra-digital/blob/main/LICENSE_HARDWARE.md">CC BY-SA 4.0</a>)
+> Hardware license: <a href="https://github.com/makethingshappy/iotextra-digital/blob/main/LICENSE_HARDWARE.md">CC BY-SA 4.0</a>
 <!-- OVERVIEW_END -->
 
 ![software](5-logo.svg)
