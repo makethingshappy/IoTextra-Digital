@@ -16,6 +16,16 @@
 
 ![software](5-logo.svg)
 
+<!-- DOCS_START -->
+## Documentation
+
+- [IoTextra Relay2 Datasheet, Rev. 3-02 (PDF)](https://makethingshappy.io/d040202302)
+- [IoTextra Relay2 Schematic, Rev. 3-02 (PDF)](https://makethingshappy.io/s040202302)
+- [IoTextra Relay2 Rev. 3-02 — GitHub](https://makethingshappy.io/g040202302)
+
+Product page: [IoTextra Relay2 — buy at makethingshappy.io](https://makethingshappy.io/products/iotextra-relay2)
+<!-- DOCS_END -->
+
 ## SKU
 
 See [SKU.md](SKU.md)
