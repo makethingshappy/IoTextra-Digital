@@ -18,7 +18,9 @@
 [![Node-RED](https://img.shields.io/badge/Node--RED-8f0000)](#software) [![MQTT](https://img.shields.io/badge/MQTT-0c447c)](#software) [![Blynk](https://img.shields.io/badge/Blynk-007a4a)](#software) [![Tasmota](https://img.shields.io/badge/Tasmota-d4680a)](#software) [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-0d7ab5)](#software)
 
 <!-- PRODUCT_START -->
-[![Buy IoTextra Relay2 at makethingshappy.io](https://img.shields.io/badge/Buy_IoTextra_Relay2-makethingshappy.io-f87733?style=for-the-badge)](https://makethingshappy.io/products/iotextra-relay2)
+## Buy IoTextra Relay2
+
+[IoTextra Relay2 at makethingshappy.io](https://makethingshappy.io/products/iotextra-relay2)
 <!-- PRODUCT_END -->
 
 <!-- SYNERGY_START -->
