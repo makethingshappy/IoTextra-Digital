@@ -389,6 +389,86 @@ jobs:
           if not entries:
               raise SystemExit("ERROR: nothing to publish")
 
+          # ---------- Software: pills + "Software" block, from the compatibility tables ----------
+          # Source of truth: the tables in makethingshappy/.github. Pills keep their short
+          # names; the "Software" block below them gives the module-specific links.
+          TABLES = 'https://raw.githubusercontent.com/makethingshappy/.github/main/IOTEXTRA_{}_COMPATIBILITY.md'
+          FONT = "font-family: 'Roboto Condensed',sans-serif; font-size: 15px; color: #333333;"
+
+          def table_row(kind):
+              try:
+                  r = requests.get(TABLES.format(kind), timeout=60)
+                  r.raise_for_status()
+              except requests.RequestException as e:
+                  raise SystemExit(f"ERROR: cannot read the {kind} compatibility table: {e}")
+              header, row = None, None
+              for line in r.text.splitlines():
+                  if not line.startswith('|'):
+                      continue
+                  cells = [c.strip() for c in line.strip().strip('|').split('|')]
+                  if cells and cells[0] == 'IoTextra Module':
+                      header = cells
+                  elif header and cells and (cells[0] == MODULE or cells[0].startswith(MODULE + ' v')):
+                      row = cells
+                      break
+              if not row:
+                  return []
+              out = []
+              for col, cell in zip(header[1:], row[1:]):
+                  urls = re.findall(r'\]\((https?://[^)\s]+)\)', cell)
+                  if urls:
+                      out.append((col, urls[-1]))
+              return out
+
+          nodered = dict(table_row('NODERED'))
+          tasmota = table_row('TASMOTA')
+          esphome = table_row('ESPHOME')
+          SW = []   # (pill, color, card title, icon, [(text, url)])
+          if nodered.get('Node-RED'):
+              SW.append(('Node-RED', '#8f0000', 'IoTflow (Node-RED)', '🔀',
+                         [(f'{short} Node-RED example flow', nodered['Node-RED'])]))
+              SW.append(('MQTT', '#0c447c', 'IoTflow (MQTT)', '📡',
+                         [(f'{short} MQTT via IoTflow — Node-RED example flow', nodered['Node-RED'])]))
+          if nodered.get('Blynk'):
+              SW.append(('Blynk', '#007a4a', 'IoTflow (Blynk)', '📱',
+                         [(f'{short} Node-RED + Blynk example flow', nodered['Blynk'])]))
+          if tasmota:
+              SW.append(('Tasmota', '#d4680a', 'MTH for Tasmota', '🏠',
+                         [(f'{short} Tasmota template — {col}', u) for col, u in tasmota]))
+          if esphome:
+              SW.append(('Home Assistant', '#0d7ab5', 'Home Assistant (ESPHome)', '🏡',
+                         [(f'{short} ESPHome config — {col}', u) for col, u in esphome]))
+          log(f"\n### Software (from the compatibility tables)\n- pills: {', '.join(x[0] for x in SW) or 'none'}")
+
+          PILL = ("flex: 0 1 auto; white-space: nowrap; color: #ffffff; font-weight: 600; border-radius: 999px; "
+                  "font-size: clamp(8px, 2.4cqi, 16px); padding: 0.7em 1.3em; line-height: 1; "
+                  "font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;")
+          badges_html = ('<div data-docs-sync="badges" style="container-type: inline-size; width: 100%; max-width: 760px; margin: 8px 0;">'
+                         '<div style="display: flex; flex-wrap: nowrap; gap: 1.2cqi; align-items: center;">'
+                         + ''.join(f'<span style="{PILL} background: {c};">{n}</span>' for n, c, *_ in SW)
+                         + '</div></div>') if SW else ''
+
+          def sw_card(title, icon, links):
+              items = '<br>\n'.join(f'<a href="{u}" target="_blank">{t}</a>' for t, u in links)
+              return (f'<div style="flex: 1; min-width: 200px; background: #f7f9fc; border-radius: 8px; padding: 16px; {FONT}">\n'
+                      f'<div style="font-size: 18px; margin-bottom: 6px;">{icon} <strong>{title}</strong>\n</div>\n{items}</div>')
+
+          software_html = (f'<p style="{FONT} line-height: 1.5;"><strong>Software</strong></p>\n'
+                           '<div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">\n'
+                           + '\n'.join(sw_card(t, i, l) for _, _, t, i, l in SW) + '\n</div>') if SW else ''
+
+          def shield(label, color):
+              return f'![{label}](https://img.shields.io/badge/{label.replace("-", "--").replace(" ", "%20")}-{color.lstrip("#")})'
+          badges_md = ('<!-- docs-sync:badges -->\n' + ' '.join(shield(n, c) for n, c, *_ in SW)) if SW else ''
+          software_md = ''
+          if SW:
+              md = ['## Software', '']
+              for _, _, title, icon, links in SW:
+                  md.append(f'**{icon} {title}**')
+                  md += [f'- [{t}]({u})' for t, u in links]
+                  md.append('')
+              software_md = '<!-- SOFTWARE_START -->\n' + '\n'.join(md).rstrip() + '\n<!-- SOFTWARE_END -->'
+
           # ---------- DOCS block for the product card ----------
           # Same look as the hand-written "Operation Modes" block: a bold title, then light
           # cards with an emoji icon, a short label and the descriptive link. Any number of
@@ -474,10 +554,32 @@ jobs:
           elif syn_missing:
               log(f"- Hardware Synergy not changed: synergy.yml missing for Rev. {', '.join(syn_missing)}")
 
+          # ---------- pills (inside the existing BADGES markers) ----------
+          if badges_html:
+              if '<!-- BADGES_START -->' in new_body:
+                  new_body = re.sub(r'<!-- BADGES_START -->.*?<!-- BADGES_END -->',
+                                    lambda m: f'<!-- BADGES_START -->\n{badges_html}\n<!-- BADGES_END -->', new_body, flags=re.S)
+              else:
+                  log('- WARNING: no BADGES markers on the card — pills not placed')
+
+          # ---------- Software block (after Hardware Synergy, before Links) ----------
+          if software_html:
+              sw_block = f'<!-- SOFTWARE_START -->\n{software_html}\n<!-- SOFTWARE_END -->'
+              if '<!-- SOFTWARE_START -->' in new_body:
+                  new_body = re.sub(r'<!-- SOFTWARE_START -->.*?<!-- SOFTWARE_END -->', lambda m: sw_block, new_body, flags=re.S)
+              elif '<!-- SYNERGY_END -->' in new_body:
+                  new_body = new_body.replace('<!-- SYNERGY_END -->', '<!-- SYNERGY_END -->\n' + sw_block, 1)
+              elif '<!-- DOCS_START -->' in new_body:
+                  new_body = new_body.replace('<!-- DOCS_START -->', sw_block + '\n<!-- DOCS_START -->', 1)
+              else:
+                  new_body = new_body.rstrip() + '\n' + sw_block
+
           # ---------- Links block ----------
           block = f'<!-- DOCS_START -->\n{docs_html}\n<!-- DOCS_END -->'
           if '<!-- DOCS_START -->' in new_body:
               new_body = re.sub(r'<!-- DOCS_START -->.*?<!-- DOCS_END -->', lambda m: block, new_body, flags=re.S)
+          elif '<!-- SOFTWARE_END -->' in new_body:
+              new_body = new_body.replace('<!-- SOFTWARE_END -->', '<!-- SOFTWARE_END -->\n' + block, 1)
           elif '<!-- SYNERGY_END -->' in new_body:
               new_body = new_body.replace('<!-- SYNERGY_END -->', '<!-- SYNERGY_END -->\n' + block, 1)
           elif '<!-- MODES_END -->' in new_body:
@@ -509,11 +611,23 @@ jobs:
               new_readme = readme.replace('<!-- OVERVIEW_END -->', '<!-- OVERVIEW_END -->\n\n' + readme_block, 1)
           else:
               new_readme = readme_block + '\n\n' + readme
+          if badges_md:
+              if '<!-- docs-sync:badges -->' in new_readme:
+                  new_readme = re.sub(r'<!-- docs-sync:badges -->\n[^\n]*', lambda m: badges_md, new_readme, count=1)
+              elif re.search(r'^!\[software\]\([^)]*\)[ \t]*$', new_readme, re.M):
+                  new_readme = re.sub(r'^!\[software\]\([^)]*\)[ \t]*$', lambda m: badges_md, new_readme, count=1, flags=re.M)
+              else:
+                  log('- WARNING: README has no ![software](...) line — badges not placed')
           if syn_md:
               if '<!-- SYNERGY_START -->' in new_readme:
                   new_readme = re.sub(r'<!-- SYNERGY_START -->.*?<!-- SYNERGY_END -->', lambda m: syn_md, new_readme, flags=re.S)
               else:
                   new_readme = new_readme.replace('<!-- DOCS_START -->', syn_md + '\n\n<!-- DOCS_START -->', 1)
+          if software_md:
+              if '<!-- SOFTWARE_START -->' in new_readme:
+                  new_readme = re.sub(r'<!-- SOFTWARE_START -->.*?<!-- SOFTWARE_END -->', lambda m: software_md, new_readme, flags=re.S)
+              else:
+                  new_readme = new_readme.replace('<!-- DOCS_START -->', software_md + '\n\n<!-- DOCS_START -->', 1)
           save('README_after.md', new_readme)
           save('redirects.json', json.dumps(redirect_log, indent=2))
 
