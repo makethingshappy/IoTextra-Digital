@@ -20,11 +20,13 @@
 <!-- SYNERGY_START -->
 ## Hardware Synergy
 
-- 🔌 **Standalone** — Relay control is available through the HOST connector, or via the I²C bus using the onboard I/O expander.
-- 🧠 **Smart** — An IoTsmart module is inserted into the HOST connector. Relay control and the 5V module supply are provided through HOST, powered from the IoTsmart module.
-  *Exception: SKU 040202302310, 040202302311 — only with a spacer (Height Extender) or via a cable connection.*
-- 🏗 **Mezzanine** — The module is installed into an IoTbase carrier board. Relay control and the 5V module supply are provided through HOST.
-  *Exception: SKU 040202302310, 040202302311, 040202302411 — only with a spacer (Height Extender) or via a cable connection.*
+🔌 **Standalone** — Relay control is available through the HOST connector, or via the I²C bus using the onboard I/O expander.
+
+🧠 **Smart** — An IoTsmart module is inserted into the HOST connector. Relay control and the 5V module supply are provided through HOST, powered from the IoTsmart module.<br>
+*Exception: SKU 040202302310, 040202302311 — only with a spacer (Height Extender) or via a cable connection.*
+
+🏗 **Mezzanine** — The module is installed into an IoTbase carrier board. Relay control and the 5V module supply are provided through HOST.<br>
+*Exception: SKU 040202302310, 040202302311, 040202302411 — only with a spacer (Height Extender) or via a cable connection.*
 <!-- SYNERGY_END -->
 
 <!-- SOFTWARE_START -->
@@ -52,15 +54,9 @@
 - [IoTextra Relay2 ESPHome config — IoTbase NANO + Waveshare ESP32-S3-NANO](https://github.com/makethingshappy/MTH-for-ESPHome/blob/main/Configs/IoTbase_NANO_Waveshare-ESP32-S3-NANO/iotextra-relay2-v3-02-iotbase-nano-v3-06-ws-esp32s3-nano-gpio.yaml)
 <!-- SOFTWARE_END -->
 
-<!-- DOCS_START -->
-## Documentation
-
-- [IoTextra Relay2 Datasheet, Rev. 3-02 (PDF)](https://makethingshappy.io/d040202302)
-- [IoTextra Relay2 Schematic, Rev. 3-02 (PDF)](https://makethingshappy.io/s040202302)
-- [IoTextra Relay2 Rev. 3-02 — GitHub](https://makethingshappy.io/g040202302)
-
+<!-- PRODUCT_START -->
 Product page: [IoTextra Relay2 — buy at makethingshappy.io](https://makethingshappy.io/products/iotextra-relay2)
-<!-- DOCS_END -->
+<!-- PRODUCT_END -->
 
 ## SKU
 
