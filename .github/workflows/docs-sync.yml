@@ -524,6 +524,10 @@ jobs:
                       f'<div style="font-size: 18px; margin-bottom: 6px;">{icon} <strong>{title}</strong>\n</div>\n'
                       f'{text}{exc}</div>')
 
+          UNMARKED_MODES = re.compile(
+              r'<p[^>]*>\s*<strong>Operation Modes</strong>\s*</p>\s*<div[^>]*>'
+              r'(?:\s*<div[^>]*>\s*<div[^>]*>(?:(?!</div>).)*</div>(?:(?!</div>).)*</div>){3}\s*</div>', re.S)
+
           syn_md = ''
           if syn_entries and not syn_missing:
               parts = [h2('Hardware Synergy')]
@@ -547,6 +551,11 @@ jobs:
                   new_body = re.sub(r'<!-- SYNERGY_START -->.*?<!-- SYNERGY_END -->', lambda m: syn_block, new_body, flags=re.S)
               elif '<!-- MODES_START -->' in new_body:
                   new_body = re.sub(r'<!-- MODES_START -->.*?<!-- MODES_END -->', lambda m: syn_block, new_body, flags=re.S)
+              elif len(UNMARKED_MODES.findall(new_body)) == 1:
+                  # hand-written "Operation Modes" block without markers: title + 3 mode cards
+                  save('removed_unmarked_operation_modes.html', UNMARKED_MODES.search(new_body).group(0))
+                  new_body = UNMARKED_MODES.sub(lambda m: syn_block, new_body, count=1)
+                  log('- "Operation Modes" block without markers replaced (saved in the artifact)')
               elif '<!-- DOCS_START -->' in new_body:
                   new_body = new_body.replace('<!-- DOCS_START -->', syn_block + '\n<!-- DOCS_START -->', 1)
               else:
