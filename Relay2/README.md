@@ -14,7 +14,8 @@
 > Hardware license: <a href="https://github.com/makethingshappy/iotextra-digital/blob/main/LICENSE_HARDWARE.md">CC BY-SA 4.0</a>
 <!-- OVERVIEW_END -->
 
-![software](5-logo.svg)
+<!-- docs-sync:badges -->
+![Node-RED](https://img.shields.io/badge/Node--RED-8f0000) ![MQTT](https://img.shields.io/badge/MQTT-0c447c) ![Blynk](https://img.shields.io/badge/Blynk-007a4a) ![Tasmota](https://img.shields.io/badge/Tasmota-d4680a) ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-0d7ab5)
 
 <!-- SYNERGY_START -->
 ## Hardware Synergy
@@ -25,6 +26,31 @@
 - 🏗 **Mezzanine** — The module is installed into an IoTbase carrier board. Relay control and the 5V module supply are provided through HOST.
   *Exception: SKU 040202302310, 040202302311, 040202302411 — only with a spacer (Height Extender) or via a cable connection.*
 <!-- SYNERGY_END -->
+
+<!-- SOFTWARE_START -->
+## Software
+
+**🔀 IoTflow (Node-RED)**
+- [IoTextra Relay2 Node-RED example flow](https://github.com/makethingshappy/IoTflow/blob/main/Node-RED%20Examples/relay2_board_flow.json)
+
+**📡 IoTflow (MQTT)**
+- [IoTextra Relay2 MQTT via IoTflow — Node-RED example flow](https://github.com/makethingshappy/IoTflow/blob/main/Node-RED%20Examples/relay2_board_flow.json)
+
+**📱 IoTflow (Blynk)**
+- [IoTextra Relay2 Node-RED + Blynk example flow](https://github.com/makethingshappy/IoTflow/blob/main/Node-RED%20Examples/relay2_board_flow_with_blynk.json)
+
+**🏠 MTH for Tasmota**
+- [IoTextra Relay2 Tasmota template — IoTsmart ESP32-S3](https://github.com/makethingshappy/IoThome/blob/main/Tasmota_Templates/IoTsmart_ESP32-S3.md#iotextra-relay2)
+- [IoTextra Relay2 Tasmota template — IoTsmart XIAO + XIAO ESP32-S3](https://github.com/makethingshappy/IoThome/blob/main/Tasmota_Templates/IoTsmart_XIAO_XIAO-ESP32-S3.md#iotextra-relay2)
+- [IoTextra Relay2 Tasmota template — IoTbase NANO + Waveshare ESP32-S3-NANO](https://github.com/makethingshappy/IoThome/blob/main/Tasmota_Templates/IoTbase_Nano.md#iotextra-relay2)
+- [IoTextra Relay2 Tasmota template — IoTbase Feather + Adafruit ESP32-C6 Feather](https://github.com/makethingshappy/IoThome/blob/main/Tasmota_Templates/IoTbase_Feather.md#iotextra-relay2)
+
+**🏡 Home Assistant (ESPHome)**
+- [IoTextra Relay2 ESPHome config — IoTsmart ESP32-S3](https://github.com/makethingshappy/MTH-for-ESPHome/blob/main/Configs/IoTsmart_ESP32-S3/iotextra-relay2-v3-02-iotsmart-esp32s3-v2-01-gpio.yaml)
+- [IoTextra Relay2 ESPHome config — IoTsmart XIAO + XIAO ESP32-S3](https://github.com/makethingshappy/MTH-for-ESPHome/blob/main/Configs/IoTsmart_XIAO_XIAO-ESP32-S3/iotextra-relay2-v3-02-iotsmart-xiao-v1-02-xiao-esp32s3-gpio.yaml)
+- [IoTextra Relay2 ESPHome config — IoTbase PICO + Raspberry Pi Pico W](https://github.com/makethingshappy/MTH-for-ESPHome/blob/main/Configs/IoTbase_PICO_Raspberry-Pi-Pico-W/iotextra-relay2-v3-02-iotbase-pico-v3-05-pico-w-gpio.yaml)
+- [IoTextra Relay2 ESPHome config — IoTbase NANO + Waveshare ESP32-S3-NANO](https://github.com/makethingshappy/MTH-for-ESPHome/blob/main/Configs/IoTbase_NANO_Waveshare-ESP32-S3-NANO/iotextra-relay2-v3-02-iotbase-nano-v3-06-ws-esp32s3-nano-gpio.yaml)
+<!-- SOFTWARE_END -->
 
 <!-- DOCS_START -->
 ## Documentation
