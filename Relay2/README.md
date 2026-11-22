@@ -16,6 +16,16 @@
 
 ![software](5-logo.svg)
 
+<!-- SYNERGY_START -->
+## Hardware Synergy
+
+- 🔌 **Standalone** — Relay control is available through the HOST connector, or via the I²C bus using the onboard I/O expander.
+- 🧠 **Smart** — An IoTsmart module is inserted into the HOST connector. Relay control and the 5V module supply are provided through HOST, powered from the IoTsmart module.
+  *Exception: SKU 040202302310, 040202302311 — only with a spacer (Height Extender) or via a cable connection.*
+- 🏗 **Mezzanine** — The module is installed into an IoTbase carrier board. Relay control and the 5V module supply are provided through HOST.
+  *Exception: SKU 040202302310, 040202302311, 040202302411 — only with a spacer (Height Extender) or via a cable connection.*
+<!-- SYNERGY_END -->
+
 <!-- DOCS_START -->
 ## Documentation
 
