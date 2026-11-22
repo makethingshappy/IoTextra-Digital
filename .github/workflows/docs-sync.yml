@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: pip install pikepdf requests
+        run: pip install pikepdf requests pyyaml
 
       - name: Docs sync
         env:
@@ -48,7 +48,7 @@ jobs:
         run: |
           python3 << 'PYEOF'
           import os, re, glob, json, time, base64, hashlib, urllib.parse
-          import requests, pikepdf
+          import requests, pikepdf, yaml
 
           SHOP = '55b706-7c.myshopify.com'
           STORE = 'https://makethingshappy.io'
@@ -312,6 +312,8 @@ jobs:
 
           # ---------- per revision ----------
           entries = []   # (rev_label, [(text, url, icon)])
+          syn_entries = []   # (rev_label, modes, {target: [SKU with exception]})
+          syn_missing = []
           short = f'IoTextra {MODULE}'
           safe = MODULE.replace(' ', '-')
           for code in sorted(revs):
@@ -323,6 +325,36 @@ jobs:
               if not rev_dir:
                   log(f"WARNING: no folder `{MODULE}/v{dotted}` or `{MODULE}/v.{dotted}` in the repo — skipped")
                   continue
+              syn_path = f'{rev_dir}/synergy.yml'
+              if os.path.isfile(syn_path):
+                  with open(syn_path, encoding='utf-8') as f:
+                      syn = yaml.safe_load(f) or {}
+                  modes = syn.get('modes') or {}
+                  for m in ('standalone', 'smart', 'mezzanine'):
+                      if not (modes.get(m) or '').strip():
+                          raise SystemExit(f"ERROR: `{syn_path}`: text for mode '{m}' is missing")
+                  on_sale = set(revs[code])
+                  exceptions = {}
+                  for target in ('iotsmart_v_host', 'iotbase'):
+                      mt = (syn.get('mounting') or {}).get(target) or {}
+                      direct = {str(x) for x in (mt.get('direct') or [])}
+                      spacer = {str(x) for x in (mt.get('spacer_or_cable') or [])}
+                      both = direct & spacer
+                      missing = on_sale - direct - spacer
+                      if both:
+                          raise SystemExit(f"ERROR: `{syn_path}`, {target}: SKU in both lists: {sorted(both)}")
+                      if missing:
+                          raise SystemExit(f"ERROR: `{syn_path}`, {target}: SKU on sale not listed in direct or spacer_or_cable: {sorted(missing)}")
+                      extra = (direct | spacer) - on_sale
+                      if extra:
+                          log(f"- note: `{syn_path}`, {target}: listed but not on sale (ignored): {sorted(extra)}")
+                      exceptions[target] = [x for x in revs[code] if x in spacer]
+                  syn_entries.append((rev, modes, exceptions))
+                  log(f"- Hardware Synergy from `{syn_path}`: Smart exceptions {exceptions['iotsmart_v_host'] or 'none'}, Mezzanine exceptions {exceptions['iotbase'] or 'none'}")
+              else:
+                  syn_missing.append(rev)
+                  log(f"WARNING: no `{syn_path}` — Hardware Synergy block not generated")
+
               links = []
               for t in DOC_TYPES:
                   folder = f"{rev_dir}/{t['folder']}"
@@ -379,13 +411,79 @@ jobs:
 
           body = product['descriptionHtml']
           save('card_before.html', body)
+          new_body = body
+
+          # ---------- Hardware Synergy block (from synergy.yml) ----------
+          # Replaces the former "Operation Modes" block, in the same place and the same look.
+          EXC = 'only with a spacer (Height Extender) or via a cable connection.'
+          MODE_UI = [('standalone', '🔌', 'Standalone', None, None),
+                     ('smart', '🧠', 'Smart', 'iotsmart_v_host', ('IoTsmart', 'https://makethingshappy.io/collections/iotsmart')),
+                     ('mezzanine', '🏗', 'Mezzanine', 'iotbase', ('IoTbase', 'https://makethingshappy.io/collections/iotbase'))]
+
+          def mode_card(modes, exceptions, key, icon, title, target, link):
+              text = ' '.join((modes.get(key) or '').split())
+              if link and link[0] in text:   # keep the internal link to the collection
+                  text = text.replace(link[0], f'<a href="{link[1]}"><strong>{link[0]}</strong></a>', 1)
+              exc = ''
+              if target and exceptions.get(target):
+                  exc = (f'\n<div style="margin-top: 8px; font-size: 14px; color: #666666; font-style: italic;">'
+                         f'Exception: SKU {", ".join(exceptions[target])} — {EXC}</div>')
+              return (f'<div style="flex: 1; min-width: 200px; background: #f7f9fc; border-radius: 8px; padding: 16px; {FONT}">\n'
+                      f'<div style="font-size: 18px; margin-bottom: 6px;">{icon} <strong>{title}</strong>\n</div>\n'
+                      f'{text}{exc}</div>')
+
+          syn_md = ''
+          if syn_entries and not syn_missing:
+              parts = [f'<p style="{FONT} line-height: 1.5;"><strong>Hardware Synergy</strong></p>']
+              md = ['## Hardware Synergy', '']
+              for rev, modes, exceptions in syn_entries:
+                  if len(syn_entries) > 1:
+                      parts.append(f'<p style="{FONT} margin: 8px 0 4px;"><strong>Rev. {rev}</strong></p>')
+                      md += [f'**Rev. {rev}**', '']
+                  parts.append('<div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">\n'
+                               + '\n'.join(mode_card(modes, exceptions, *u) for u in MODE_UI) + '\n</div>')
+                  for key, icon, title, target, _ in MODE_UI:
+                      md.append(f"- {icon} **{title}** — {' '.join((modes.get(key) or '').split())}")
+                      if target and exceptions.get(target):
+                          md.append(f"  *Exception: SKU {', '.join(exceptions[target])} — {EXC}*")
+                  md.append('')
+              syn_html = '\n'.join(parts)
+              syn_block = f'<!-- SYNERGY_START -->\n{syn_html}\n<!-- SYNERGY_END -->'
+              syn_md = '<!-- SYNERGY_START -->\n' + '\n'.join(md).rstrip() + '\n<!-- SYNERGY_END -->'
+              if '<!-- SYNERGY_START -->' in new_body:
+                  new_body = re.sub(r'<!-- SYNERGY_START -->.*?<!-- SYNERGY_END -->', lambda m: syn_block, new_body, flags=re.S)
+              elif '<!-- MODES_START -->' in new_body:
+                  new_body = re.sub(r'<!-- MODES_START -->.*?<!-- MODES_END -->', lambda m: syn_block, new_body, flags=re.S)
+              elif '<!-- DOCS_START -->' in new_body:
+                  new_body = new_body.replace('<!-- DOCS_START -->', syn_block + '\n<!-- DOCS_START -->', 1)
+              else:
+                  new_body = new_body.rstrip() + '\n' + syn_block
+              # Remove the former hand-written "Hardware Synergy:" paragraph and the "Note:" line
+              # right after it — only on an exact structural match; otherwise report and leave it.
+              old_para = re.compile(r'\n?<p[^>]*>\s*<strong>Hardware Synergy:</strong>(?:(?!</p>).)*</p>'
+                                    r'(?:\s*<p[^>]*>\s*Note:(?:(?!</p>).)*</p>)?', re.S)
+              found = old_para.findall(new_body)
+              if len(found) == 1:
+                  save('removed_old_hardware_synergy.html', found[0])
+                  new_body = old_para.sub('', new_body, count=1)
+                  log('- former "Hardware Synergy:" paragraph removed (saved in the artifact)')
+              elif len(found) > 1:
+                  log('- WARNING: several "Hardware Synergy:" paragraphs found — left untouched, remove by hand')
+              elif 'Hardware Synergy:' in new_body:
+                  log('- WARNING: a "Hardware Synergy:" text was found in an unexpected form — left untouched, remove by hand')
+          elif syn_missing:
+              log(f"- Hardware Synergy not changed: synergy.yml missing for Rev. {', '.join(syn_missing)}")
+
+          # ---------- Links block ----------
           block = f'<!-- DOCS_START -->\n{docs_html}\n<!-- DOCS_END -->'
-          if '<!-- DOCS_START -->' in body:
-              new_body = re.sub(r'<!-- DOCS_START -->.*?<!-- DOCS_END -->', lambda m: block, body, flags=re.S)
-          elif '<!-- MODES_END -->' in body:
-              new_body = body.replace('<!-- MODES_END -->', '<!-- MODES_END -->\n' + block, 1)
+          if '<!-- DOCS_START -->' in new_body:
+              new_body = re.sub(r'<!-- DOCS_START -->.*?<!-- DOCS_END -->', lambda m: block, new_body, flags=re.S)
+          elif '<!-- SYNERGY_END -->' in new_body:
+              new_body = new_body.replace('<!-- SYNERGY_END -->', '<!-- SYNERGY_END -->\n' + block, 1)
+          elif '<!-- MODES_END -->' in new_body:
+              new_body = new_body.replace('<!-- MODES_END -->', '<!-- MODES_END -->\n' + block, 1)
           else:
-              new_body = body.rstrip() + '\n' + block
+              new_body = new_body.rstrip() + '\n' + block
           save('card_after.html', new_body)
 
           # ---------- DOCS block for the README ----------
@@ -411,6 +509,11 @@ jobs:
               new_readme = readme.replace('<!-- OVERVIEW_END -->', '<!-- OVERVIEW_END -->\n\n' + readme_block, 1)
           else:
               new_readme = readme_block + '\n\n' + readme
+          if syn_md:
+              if '<!-- SYNERGY_START -->' in new_readme:
+                  new_readme = re.sub(r'<!-- SYNERGY_START -->.*?<!-- SYNERGY_END -->', lambda m: syn_md, new_readme, flags=re.S)
+              else:
+                  new_readme = new_readme.replace('<!-- DOCS_START -->', syn_md + '\n\n<!-- DOCS_START -->', 1)
           save('README_after.md', new_readme)
           save('redirects.json', json.dumps(redirect_log, indent=2))
 
