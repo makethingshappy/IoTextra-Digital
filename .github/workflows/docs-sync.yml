@@ -378,13 +378,13 @@ jobs:
                       links.append((f'{text} (PDF)', f'{STORE}{path}', t['key']))
                   else:
                       gh = f'https://github.com/{REPO}/blob/main/' + urllib.parse.quote(src)
-                      links.append((f"{text} ({t['ext']}) — GitHub", gh, t['key']))
+                      links.append((f"{text} ({t['ext']}) on GitHub", gh, t['key']))
 
               gpath = f'/g{code}'
               gtarget = f'https://github.com/{REPO}/tree/main/' + urllib.parse.quote(rev_dir)
               if get_redirect(gpath) is None:
                   set_redirect(gpath, gtarget)     # create only; an existing /g code is left untouched
-              links.append((f'{short} Rev. {rev} — GitHub', f'{STORE}{gpath}', 'github'))
+              links.append((f'{short} Rev. {rev} on GitHub', f'{STORE}{gpath}', 'github'))
               entries.append((rev, links))
 
           if not entries:
@@ -427,13 +427,13 @@ jobs:
           SW = []   # (pill, color, [(text, url)]) — the pill is also the card title
           if nodered.get('Node-RED'):
               SW.append(('Node-RED', '#8f0000', [(f'{short} Node-RED example flow', nodered['Node-RED'])]))
-              SW.append(('MQTT', '#0c447c', [(f'{short} MQTT — Node-RED example flow', nodered['Node-RED'])]))
+              SW.append(('MQTT', '#0c447c', [(f'{short} MQTT example (Node-RED flow)', nodered['Node-RED'])]))
           if nodered.get('Blynk'):
               SW.append(('Blynk', '#007a4a', [(f'{short} Node-RED + Blynk example flow', nodered['Blynk'])]))
           if tasmota:
-              SW.append(('Tasmota', '#d4680a', [(f'{short} Tasmota template — {col}', u) for col, u in tasmota]))
+              SW.append(('Tasmota', '#d4680a', [(f'{short} Tasmota template for {col}', u) for col, u in tasmota]))
           if esphome:
-              SW.append(('Home Assistant', '#0d7ab5', [(f'{short} ESPHome config — {col}', u) for col, u in esphome]))
+              SW.append(('Home Assistant', '#0d7ab5', [(f'{short} ESPHome config for {col}', u) for col, u in esphome]))
 
           def anchor(name):
               return 'sw-' + re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
@@ -507,7 +507,7 @@ jobs:
 
           # ---------- Hardware Synergy block (from synergy.yml) ----------
           # Replaces the former "Operation Modes" block, in the same place and the same look.
-          EXC = 'only with a spacer (Height Extender) or via a cable connection.'
+          EXC = 'can be installed only with a spacer (Height Extender) or via a cable connection.'
           MODE_UI = [('standalone', '🔌', 'Standalone', None, None),
                      ('smart', '🧠', 'Smart', 'iotsmart_v_host', ('IoTsmart', 'https://makethingshappy.io/collections/iotsmart')),
                      ('mezzanine', '🏗', 'Mezzanine', 'iotbase', ('IoTbase', 'https://makethingshappy.io/collections/iotbase'))]
@@ -519,7 +519,7 @@ jobs:
               exc = ''
               if target and exceptions.get(target):
                   exc = (f'\n<div style="margin-top: 8px; font-size: 14px; color: #666666; font-style: italic;">'
-                         f'Exception: SKU {", ".join(exceptions[target])} — {EXC}</div>')
+                         f'Exception: SKU {", ".join(exceptions[target])} {EXC}</div>')
               return (f'<div style="flex: 1; min-width: 200px; background: #f7f9fc; border-radius: 8px; padding: 16px; {FONT}">\n'
                       f'<div style="font-size: 18px; margin-bottom: 6px;">{icon} <strong>{title}</strong>\n</div>\n'
                       f'{text}{exc}</div>')
@@ -535,9 +535,9 @@ jobs:
                   parts.append('<div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">\n'
                                + '\n'.join(mode_card(modes, exceptions, *u) for u in MODE_UI) + '\n</div>')
                   for key, icon, title, target, _ in MODE_UI:
-                      line = f"{icon} **{title}** — {' '.join((modes.get(key) or '').split())}"
+                      line = f"{icon} **{title}:** {' '.join((modes.get(key) or '').split())}"
                       if target and exceptions.get(target):
-                          line += f"<br>\n*Exception: SKU {', '.join(exceptions[target])} — {EXC}*"
+                          line += f"<br>\n*Exception: SKU {', '.join(exceptions[target])} {EXC}*"
                       md += [line, '']
                   md.append('')
               syn_html = '\n'.join(parts)
@@ -630,8 +630,9 @@ jobs:
           # ---------- README: link to the product page ----------
           # The README carries no documentation list (the files are in the repo itself); it keeps
           # one line linking to the product page. A former DOCS block is replaced by it.
+          buy_badge = 'https://img.shields.io/badge/Buy_' + short.replace(' ', '_') + '-makethingshappy.io-f87733?style=for-the-badge'
           readme_block = ('<!-- PRODUCT_START -->\n'
-                          f'Product page: [{short} — buy at makethingshappy.io]({STORE}/products/{product["handle"]})\n'
+                          f'[![Buy {short} at makethingshappy.io]({buy_badge})]({STORE}/products/{product["handle"]})\n'
                           '<!-- PRODUCT_END -->')
 
           readme_path = f'{MODULE}/README.md'
@@ -665,6 +666,10 @@ jobs:
                   new_readme = re.sub(r'<!-- SOFTWARE_START -->.*?<!-- SOFTWARE_END -->', lambda m: software_md, new_readme, flags=re.S)
               else:
                   new_readme = new_readme.replace('<!-- PRODUCT_START -->', software_md + '\n\n<!-- PRODUCT_START -->', 1)
+          # The product button goes right under the software badges, where readers look first
+          if '<!-- docs-sync:badges -->' in new_readme:
+              new_readme = re.sub(r'\n*<!-- PRODUCT_START -->.*?<!-- PRODUCT_END -->\n*', '\n\n', new_readme, count=1, flags=re.S)
+              new_readme = re.sub(r'(<!-- docs-sync:badges -->\n[^\n]*)', lambda m: m.group(1) + '\n\n' + readme_block, new_readme, count=1)
           save('README_after.md', new_readme)
           save('redirects.json', json.dumps(redirect_log, indent=2))
 
