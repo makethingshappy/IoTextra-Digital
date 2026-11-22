@@ -378,7 +378,7 @@ jobs:
                       links.append((f'{text} (PDF)', f'{STORE}{path}', t['key']))
                   else:
                       gh = f'https://github.com/{REPO}/blob/main/' + urllib.parse.quote(src)
-                      links.append((f"{text} ({t['ext']}) on GitHub", gh, t['key']))
+                      links.append((f"{text} ({t['ext']})", gh, t['key']))
 
               gpath = f'/g{code}'
               gtarget = f'https://github.com/{REPO}/tree/main/' + urllib.parse.quote(rev_dir)
