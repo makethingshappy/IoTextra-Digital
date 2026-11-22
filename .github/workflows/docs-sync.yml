@@ -5,7 +5,8 @@ name: Docs Sync
 #   2. uploads the revision PDFs from this repo to Shopify Files (PDF Title metadata set),
 #   3. points the permanent short codes /d<code> and /s<code> to those files
 #      (codes are never deleted or renamed, only their target changes),
-#   4. writes a <!-- DOCS_START/END --> block into the product card and the module README.
+#   4. writes a <!-- DOCS_START/END --> block into the product card; the module README gets
+#      the Hardware Synergy and Software blocks and one line linking to the product page.
 #
 # Manual start only. With "apply" unchecked (default) it is a DRY RUN:
 # nothing is changed, the planned card HTML / README / redirects are shown
@@ -443,20 +444,23 @@ jobs:
                       f'color: #111111; line-height: 1.3; margin: 28px 0 12px;">{text}</h2>')
           log(f"\n### Software (from the compatibility tables)\n- pills: {', '.join(x[0] for x in SW) or 'none'}")
 
-          PILL = ("flex: 0 1 auto; white-space: nowrap; color: #ffffff; font-weight: 600; border-radius: 999px; "
+          PILL = ("flex: 0 1 auto; white-space: nowrap; color: #ffffff !important; font-weight: 600; border-radius: 999px; "
                   "font-size: clamp(8px, 2.4cqi, 16px); padding: 0.7em 1.3em; line-height: 1; "
                   "font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;")
-          badges_html = ('<div data-docs-sync="badges" style="container-type: inline-size; width: 100%; max-width: 760px; margin: 8px 0;">'
+          PILL_CSS = ('<style>.mth-pill{transition: background-color .2s;}'
+                      '.mth-pill:hover,.mth-pill:focus{background-color: #fb9a63 !important;}</style>')
+          badges_html = (PILL_CSS + '<div data-docs-sync="badges" style="container-type: inline-size; width: 100%; max-width: 760px; margin: 8px 0;">'
                          '<div style="display: flex; flex-wrap: nowrap; gap: 1.2cqi; align-items: center;">'
-                         + ''.join(f'<a href="#{anchor(n)}" style="{PILL} background: {c}; text-decoration: none;">{n}</a>' for n, c, _ in SW)
+                         + ''.join(f'<a class="mth-pill" href="#{anchor(n)}" style="{PILL} background: {c}; text-decoration: none;">{n}</a>' for n, c, _ in SW)
                          + '</div></div>') if SW else ''
 
-          HEAD_PILL = ("display: inline-block; white-space: nowrap; color: #ffffff; font-weight: 600; border-radius: 999px; "
+          HEAD_PILL = ("display: inline-block; white-space: nowrap; color: #ffffff !important; font-weight: 600; border-radius: 999px; "
                        "font-size: 15px; padding: 0.6em 1.2em; line-height: 1; margin-bottom: 10px; "
                        "font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;")
 
           def sw_card(name, color, links):
-              items = '<br>\n'.join(f'<a href="{u}" target="_blank">{t}</a>' for t, u in links)
+              items = ('<ul style="margin: 0; padding-left: 18px; list-style: disc; line-height: 1.6;">\n'
+                       + '\n'.join(f'<li><a href="{u}" target="_blank">{t}</a></li>' for t, u in links) + '\n</ul>')
               return (f'<div id="{anchor(name)}" style="flex: 1; min-width: 200px; background: #f7f9fc; border-radius: 8px; '
                       f'padding: 16px; scroll-margin-top: 90px; {FONT}">\n'
                       f'<div><span style="{HEAD_PILL} background: {color};">{name}</span></div>\n{items}</div>')
@@ -531,9 +535,10 @@ jobs:
                   parts.append('<div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">\n'
                                + '\n'.join(mode_card(modes, exceptions, *u) for u in MODE_UI) + '\n</div>')
                   for key, icon, title, target, _ in MODE_UI:
-                      md.append(f"- {icon} **{title}** — {' '.join((modes.get(key) or '').split())}")
+                      line = f"{icon} **{title}** — {' '.join((modes.get(key) or '').split())}"
                       if target and exceptions.get(target):
-                          md.append(f"  *Exception: SKU {', '.join(exceptions[target])} — {EXC}*")
+                          line += f"<br>\n*Exception: SKU {', '.join(exceptions[target])} — {EXC}*"
+                      md += [line, '']
                   md.append('')
               syn_html = '\n'.join(parts)
               syn_block = f'<!-- SYNERGY_START -->\n{syn_html}\n<!-- SYNERGY_END -->'
@@ -622,22 +627,20 @@ jobs:
               new_body = new_body.rstrip() + '\n' + block
           save('card_after.html', new_body)
 
-          # ---------- DOCS block for the README ----------
-          md = ['## Documentation', '']
-          for rev, links in entries:
-              if len(entries) > 1:
-                  md += [f'**Rev. {rev}**', '']
-              for t, u, _ in links:
-                  md.append(f'- [{t}]({u})')
-              md.append('')
-          md.append(f'Product page: [{short} — buy at makethingshappy.io]({STORE}/products/{product["handle"]})')
-          readme_block = '<!-- DOCS_START -->\n' + '\n'.join(md) + '\n<!-- DOCS_END -->'
+          # ---------- README: link to the product page ----------
+          # The README carries no documentation list (the files are in the repo itself); it keeps
+          # one line linking to the product page. A former DOCS block is replaced by it.
+          readme_block = ('<!-- PRODUCT_START -->\n'
+                          f'Product page: [{short} — buy at makethingshappy.io]({STORE}/products/{product["handle"]})\n'
+                          '<!-- PRODUCT_END -->')
 
           readme_path = f'{MODULE}/README.md'
           with open(readme_path, encoding='utf-8') as f:
               readme = f.read()
           save('README_before.md', readme)
-          if '<!-- DOCS_START -->' in readme:
+          if '<!-- PRODUCT_START -->' in readme:
+              new_readme = re.sub(r'<!-- PRODUCT_START -->.*?<!-- PRODUCT_END -->', lambda m: readme_block, readme, flags=re.S)
+          elif '<!-- DOCS_START -->' in readme:
               new_readme = re.sub(r'<!-- DOCS_START -->.*?<!-- DOCS_END -->', lambda m: readme_block, readme, flags=re.S)
           elif re.search(r'^!\[software\]\([^)]*\)[ \t]*$', readme, re.M):
               new_readme = re.sub(r'^(!\[software\]\([^)]*\))[ \t]*$', lambda m: m.group(1) + '\n\n' + readme_block, readme, count=1, flags=re.M)
@@ -656,18 +659,18 @@ jobs:
               if '<!-- SYNERGY_START -->' in new_readme:
                   new_readme = re.sub(r'<!-- SYNERGY_START -->.*?<!-- SYNERGY_END -->', lambda m: syn_md, new_readme, flags=re.S)
               else:
-                  new_readme = new_readme.replace('<!-- DOCS_START -->', syn_md + '\n\n<!-- DOCS_START -->', 1)
+                  new_readme = new_readme.replace('<!-- PRODUCT_START -->', syn_md + '\n\n<!-- PRODUCT_START -->', 1)
           if software_md:
               if '<!-- SOFTWARE_START -->' in new_readme:
                   new_readme = re.sub(r'<!-- SOFTWARE_START -->.*?<!-- SOFTWARE_END -->', lambda m: software_md, new_readme, flags=re.S)
               else:
-                  new_readme = new_readme.replace('<!-- DOCS_START -->', software_md + '\n\n<!-- DOCS_START -->', 1)
+                  new_readme = new_readme.replace('<!-- PRODUCT_START -->', software_md + '\n\n<!-- PRODUCT_START -->', 1)
           save('README_after.md', new_readme)
           save('redirects.json', json.dumps(redirect_log, indent=2))
 
           log('\n### Card DOCS block')
           log('```html\n' + docs_html + '\n```')
-          log('### README DOCS block')
+          log('### README product link')
           log('```markdown\n' + readme_block + '\n```')
 
           # ---------- apply card + README ----------
