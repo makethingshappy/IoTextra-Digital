@@ -580,7 +580,7 @@ jobs:
           # Hand-written section titles written as a bold paragraph are turned into the same
           # heading as the generated blocks. Text is kept; already converted cards are left as
           # they are. Add new section names to this list as they are met on other cards.
-          for title in ('Key Specifications', 'Maximum Switching Capability', 'Technical Comparison', 'Applications'):
+          for title in ('Key Specifications', 'Maximum Switching Capability', 'MOSFET Variants', 'Technical Comparison', 'Applications'):
               pat = re.compile(r'<p[^>]*>\s*<strong>\s*' + re.escape(title) + r'\s*</strong>\s*</p>')
               hits = pat.findall(new_body)
               if len(hits) == 1:
