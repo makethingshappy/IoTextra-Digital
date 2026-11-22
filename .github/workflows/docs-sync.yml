@@ -423,21 +423,24 @@ jobs:
           nodered = dict(table_row('NODERED'))
           tasmota = table_row('TASMOTA')
           esphome = table_row('ESPHOME')
-          SW = []   # (pill, color, card title, icon, [(text, url)])
+          SW = []   # (pill, color, [(text, url)]) — the pill is also the card title
           if nodered.get('Node-RED'):
-              SW.append(('Node-RED', '#8f0000', 'IoTflow (Node-RED)', '🔀',
-                         [(f'{short} Node-RED example flow', nodered['Node-RED'])]))
-              SW.append(('MQTT', '#0c447c', 'IoTflow (MQTT)', '📡',
-                         [(f'{short} MQTT via IoTflow — Node-RED example flow', nodered['Node-RED'])]))
+              SW.append(('Node-RED', '#8f0000', [(f'{short} Node-RED example flow', nodered['Node-RED'])]))
+              SW.append(('MQTT', '#0c447c', [(f'{short} MQTT — Node-RED example flow', nodered['Node-RED'])]))
           if nodered.get('Blynk'):
-              SW.append(('Blynk', '#007a4a', 'IoTflow (Blynk)', '📱',
-                         [(f'{short} Node-RED + Blynk example flow', nodered['Blynk'])]))
+              SW.append(('Blynk', '#007a4a', [(f'{short} Node-RED + Blynk example flow', nodered['Blynk'])]))
           if tasmota:
-              SW.append(('Tasmota', '#d4680a', 'MTH for Tasmota', '🏠',
-                         [(f'{short} Tasmota template — {col}', u) for col, u in tasmota]))
+              SW.append(('Tasmota', '#d4680a', [(f'{short} Tasmota template — {col}', u) for col, u in tasmota]))
           if esphome:
-              SW.append(('Home Assistant', '#0d7ab5', 'Home Assistant (ESPHome)', '🏡',
-                         [(f'{short} ESPHome config — {col}', u) for col, u in esphome]))
+              SW.append(('Home Assistant', '#0d7ab5', [(f'{short} ESPHome config — {col}', u) for col, u in esphome]))
+
+          def anchor(name):
+              return 'sw-' + re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+
+          # Section headings of the generated blocks (Hardware Synergy, Software, Links)
+          def h2(text):
+              return (f'<h2 style="font-family: \'Roboto Condensed\',sans-serif; font-size: 22px; font-weight: 700; '
+                      f'color: #111111; line-height: 1.3; margin: 28px 0 12px;">{text}</h2>')
           log(f"\n### Software (from the compatibility tables)\n- pills: {', '.join(x[0] for x in SW) or 'none'}")
 
           PILL = ("flex: 0 1 auto; white-space: nowrap; color: #ffffff; font-weight: 600; border-radius: 999px; "
@@ -445,26 +448,31 @@ jobs:
                   "font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;")
           badges_html = ('<div data-docs-sync="badges" style="container-type: inline-size; width: 100%; max-width: 760px; margin: 8px 0;">'
                          '<div style="display: flex; flex-wrap: nowrap; gap: 1.2cqi; align-items: center;">'
-                         + ''.join(f'<span style="{PILL} background: {c};">{n}</span>' for n, c, *_ in SW)
+                         + ''.join(f'<a href="#{anchor(n)}" style="{PILL} background: {c}; text-decoration: none;">{n}</a>' for n, c, _ in SW)
                          + '</div></div>') if SW else ''
 
-          def sw_card(title, icon, links):
-              items = '<br>\n'.join(f'<a href="{u}" target="_blank">{t}</a>' for t, u in links)
-              return (f'<div style="flex: 1; min-width: 200px; background: #f7f9fc; border-radius: 8px; padding: 16px; {FONT}">\n'
-                      f'<div style="font-size: 18px; margin-bottom: 6px;">{icon} <strong>{title}</strong>\n</div>\n{items}</div>')
+          HEAD_PILL = ("display: inline-block; white-space: nowrap; color: #ffffff; font-weight: 600; border-radius: 999px; "
+                       "font-size: 15px; padding: 0.6em 1.2em; line-height: 1; margin-bottom: 10px; "
+                       "font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;")
 
-          software_html = (f'<p style="{FONT} line-height: 1.5;"><strong>Software</strong></p>\n'
+          def sw_card(name, color, links):
+              items = '<br>\n'.join(f'<a href="{u}" target="_blank">{t}</a>' for t, u in links)
+              return (f'<div id="{anchor(name)}" style="flex: 1; min-width: 200px; background: #f7f9fc; border-radius: 8px; '
+                      f'padding: 16px; scroll-margin-top: 90px; {FONT}">\n'
+                      f'<div><span style="{HEAD_PILL} background: {color};">{name}</span></div>\n{items}</div>')
+
+          software_html = (h2('Software') + '\n'
                            '<div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">\n'
-                           + '\n'.join(sw_card(t, i, l) for _, _, t, i, l in SW) + '\n</div>') if SW else ''
+                           + '\n'.join(sw_card(*x) for x in SW) + '\n</div>') if SW else ''
 
           def shield(label, color):
               return f'![{label}](https://img.shields.io/badge/{label.replace("-", "--").replace(" ", "%20")}-{color.lstrip("#")})'
-          badges_md = ('<!-- docs-sync:badges -->\n' + ' '.join(shield(n, c) for n, c, *_ in SW)) if SW else ''
+          badges_md = ('<!-- docs-sync:badges -->\n' + ' '.join(f'[{shield(n, c)}](#software)' for n, c, _ in SW)) if SW else ''
           software_md = ''
           if SW:
               md = ['## Software', '']
-              for _, _, title, icon, links in SW:
-                  md.append(f'**{icon} {title}**')
+              for name, color, links in SW:
+                  md.append(shield(name, color))
                   md += [f'- [{t}]({u})' for t, u in links]
                   md.append('')
               software_md = '<!-- SOFTWARE_START -->\n' + '\n'.join(md).rstrip() + '\n<!-- SOFTWARE_END -->'
@@ -485,7 +493,7 @@ jobs:
                       f'<a href="{url}" target="_blank">{text}</a></div>')
 
           all_links = [l for _, links in entries for l in links]
-          docs_html = (f'<p style="{FONT} line-height: 1.5;"><strong>Links</strong></p>\n'
+          docs_html = (h2('Links') + '\n'
                        '<div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">\n'
                        + '\n'.join(card(t, u, k) for t, u, k in all_links) + '\n</div>')
 
@@ -514,7 +522,7 @@ jobs:
 
           syn_md = ''
           if syn_entries and not syn_missing:
-              parts = [f'<p style="{FONT} line-height: 1.5;"><strong>Hardware Synergy</strong></p>']
+              parts = [h2('Hardware Synergy')]
               md = ['## Hardware Synergy', '']
               for rev, modes, exceptions in syn_entries:
                   if len(syn_entries) > 1:
@@ -554,6 +562,19 @@ jobs:
           elif syn_missing:
               log(f"- Hardware Synergy not changed: synergy.yml missing for Rev. {', '.join(syn_missing)}")
 
+          # ---------- hand-written section headings -> same <h2> style (once per card) ----------
+          # "Key Specifications" and "Applications" written as a bold paragraph are turned into
+          # the same heading as the generated blocks. Text is kept; already converted cards are
+          # left as they are.
+          for title in ('Key Specifications', 'Applications'):
+              pat = re.compile(r'<p[^>]*>\s*<strong>\s*' + re.escape(title) + r'\s*</strong>\s*</p>')
+              hits = pat.findall(new_body)
+              if len(hits) == 1:
+                  new_body = pat.sub(lambda m: h2(title), new_body, count=1)
+                  log(f'- heading "{title}" converted to <h2>')
+              elif len(hits) > 1:
+                  log(f'- WARNING: several "{title}" headings — left untouched')
+
           # ---------- pills (inside the existing BADGES markers) ----------
           if badges_html:
               if '<!-- BADGES_START -->' in new_body:
@@ -564,6 +585,19 @@ jobs:
 
           # ---------- Software block (after Hardware Synergy, before Links) ----------
           if software_html:
+              # Remove the former hand-written "Software Power:" paragraph and the list right
+              # after it — only on an exact structural match; otherwise report and leave it.
+              old_sw = re.compile(r'\n?<p[^>]*>\s*<strong>Software Power:</strong>(?:(?!</p>).)*</p>'
+                                  r'(?:\s*<ul[^>]*>(?:(?!</ul>).)*</ul>)?', re.S)
+              found = old_sw.findall(new_body)
+              if len(found) == 1:
+                  save('removed_old_software_power.html', found[0])
+                  new_body = old_sw.sub('', new_body, count=1)
+                  log('- former "Software Power:" paragraph and list removed (saved in the artifact)')
+              elif len(found) > 1:
+                  log('- WARNING: several "Software Power:" paragraphs found — left untouched, remove by hand')
+              elif 'Software Power' in new_body:
+                  log('- WARNING: a "Software Power" text was found in an unexpected form — left untouched, remove by hand')
               sw_block = f'<!-- SOFTWARE_START -->\n{software_html}\n<!-- SOFTWARE_END -->'
               if '<!-- SOFTWARE_START -->' in new_body:
                   new_body = re.sub(r'<!-- SOFTWARE_START -->.*?<!-- SOFTWARE_END -->', lambda m: sw_block, new_body, flags=re.S)
