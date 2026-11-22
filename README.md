@@ -127,14 +127,14 @@ The complete list of SKUs is provided in the following PDF located in the reposi
 ### 🛒 Purchase Links  
 Order directly from the official store:
 
-* [**IoTextra Input Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-input)
-* [**IoTextra MOSFET2 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-mosfet2)
-* [**IoTextra Octal Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal)
-* [**IoTextra Octal2 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal2)
-* [**IoTextra Octal3 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal3)
-* [**IoTextra Octal4 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-octal4)
-* [**IoTextra Relay2 Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-relay2)
-* [**IoTextra SSR Small Module**](https://makethingshappy.io/collections/digital-iotextra/products/iotextra-ssr-small)
+* [**IoTextra Input Module**](https://makethingshappy.io/products/iotextra-input)
+* [**IoTextra MOSFET2 Module**](https://makethingshappy.io/products/iotextra-mosfet2)
+* [**IoTextra Octal Module**](https://makethingshappy.io/products/iotextra-octal)
+* [**IoTextra Octal2 Module**](https://makethingshappy.io/products/iotextra-octal2)
+* [**IoTextra Octal3 Module**](https://makethingshappy.io/products/iotextra-octal3)
+* [**IoTextra Octal4 Module**](https://makethingshappy.io/products/iotextra-octal4)
+* [**IoTextra Relay2 Module**](https://makethingshappy.io/products/iotextra-relay2)
+* [**IoTextra SSR Small Module**](https://makethingshappy.io/products/iotextra-ssr-small)
 
 ---
 
