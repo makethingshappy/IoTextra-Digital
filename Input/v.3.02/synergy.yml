@@ -1,0 +1,29 @@
+# Hardware Synergy: IoTextra Input, Rev. 3-02
+# Written by hand. docs-sync shows it on the product card and in the README.
+#
+# mounting: for each target, EVERY SKU of this revision must be listed in
+#   exactly one of the two lists:
+#     direct          : installs directly, no remark on the card
+#     spacer_or_cable : card shows "Exception: SKU ... can be installed only
+#                       with a spacer (Height Extender) or via a cable connection."
+#   A SKU on sale that is missing from a list, or listed twice, stops the run
+#   with an error; nothing is guessed.
+
+modes:
+  standalone: >-
+    Input states are available through the HOST connector, or via the I²C bus
+    using the onboard I/O expander.
+  smart: >-
+    An IoTsmart module is inserted into the HOST connector. Input reading and
+    the 5V module supply are provided through HOST, powered from the IoTsmart module.
+  mezzanine: >-
+    The module is installed into an IoTbase carrier board. Input reading and
+    the 5V module supply are provided through HOST.
+
+mounting:
+  iotsmart_v_host:          # Smart mode: IoTsmart with V-HOST connector (horizontal mounting)
+    direct: ['040101302110', '040101302109', '040101302111']
+    spacer_or_cable: []
+  iotbase:                  # Mezzanine mode: IoTbase carrier board
+    direct: ['040101302110', '040101302109', '040101302111']
+    spacer_or_cable: []
