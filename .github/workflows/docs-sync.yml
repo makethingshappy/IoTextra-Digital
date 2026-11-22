@@ -630,9 +630,9 @@ jobs:
           # ---------- README: link to the product page ----------
           # The README carries no documentation list (the files are in the repo itself); it keeps
           # one line linking to the product page. A former DOCS block is replaced by it.
-          buy_badge = 'https://img.shields.io/badge/Buy_' + short.replace(' ', '_') + '-makethingshappy.io-f87733?style=for-the-badge'
           readme_block = ('<!-- PRODUCT_START -->\n'
-                          f'[![Buy {short} at makethingshappy.io]({buy_badge})]({STORE}/products/{product["handle"]})\n'
+                          f'## Buy {short}\n\n'
+                          f'[{short} at makethingshappy.io]({STORE}/products/{product["handle"]})\n'
                           '<!-- PRODUCT_END -->')
 
           readme_path = f'{MODULE}/README.md'
