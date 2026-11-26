@@ -1,0 +1,32 @@
+# Hardware Synergy: IoTextra Relay, Rev. 3-02
+# Written by hand. docs-sync shows it on the product card and in the README.
+#
+# mounting: for each target, EVERY SKU of this revision must be listed in
+#   exactly one of the two lists:
+#     direct          : installs directly, no remark on the card
+#     spacer_or_cable : card shows "Exception: SKU ... can be installed only
+#                       with a spacer (Height Extender) or via a cable connection."
+#   A SKU on sale that is missing from a list, or listed twice, stops the run
+#   with an error; nothing is guessed.
+
+modes:
+  standalone: >-
+    Connect via the HOST connector cable from any host microcontroller: SPST relay
+    control (AP0–AP3), the latching-driver enable signal (AP5) and the 5V supply
+    are provided through HOST. Latching relays are controlled via the I²C bus
+    (Qwiic connectors or SDA / SCL pins) using the onboard I/O expander.
+  smart: >-
+    An IoTsmart module is inserted into the HOST connector. Relay control, the
+    latching-driver enable signal and the 5V module supply are provided through
+    HOST, powered from the IoTsmart module.
+  mezzanine: >-
+    The module is installed into an IoTbase carrier board. Relay control, the
+    latching-driver enable signal and the 5V module supply are provided through HOST.
+
+mounting:
+  iotsmart_v_host:          # Smart mode: IoTsmart with V-HOST connector
+    direct: ['040201302201', '040201302101']
+    spacer_or_cable: []
+  iotbase:                  # Mezzanine mode: IoTbase carrier board
+    direct: []
+    spacer_or_cable: ['040201302201', '040201302101']
