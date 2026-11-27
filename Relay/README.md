@@ -14,13 +14,23 @@
 > Hardware license: <a href="https://github.com/makethingshappy/iotextra-digital/blob/main/LICENSE_HARDWARE.md">CC BY-SA 4.0</a>
 <!-- OVERVIEW_END -->
 
-![software](5-logo.svg)
+<!-- docs-sync:badges -->
+[![Tasmota](https://img.shields.io/badge/Tasmota-d4680a)](#software)
 
 <!-- PRODUCT_START -->
 ## Buy IoTextra Relay
 
 [IoTextra Relay at makethingshappy.io](https://makethingshappy.io/products/iotextra-relay)
 <!-- PRODUCT_END -->
+
+<!-- SOFTWARE_START -->
+## Software
+
+![Tasmota](https://img.shields.io/badge/Tasmota-d4680a)
+- [IoTextra Relay Tasmota template for IoTsmart ESP32-S3](https://github.com/makethingshappy/IoThome/blob/main/Tasmota_Templates/IoTsmart_ESP32-S3.md#iotextra-relay)
+- [IoTextra Relay Tasmota template for IoTsmart XIAO + XIAO ESP32-S3](https://github.com/makethingshappy/IoThome/blob/main/Tasmota_Templates/IoTsmart_XIAO_XIAO-ESP32-S3.md#iotextra-relay)
+- [IoTextra Relay Tasmota template for IoTbase NANO + Waveshare ESP32-S3-NANO](https://github.com/makethingshappy/IoThome/blob/main/Tasmota_Templates/IoTbase_Nano.md#iotextra-relay)
+<!-- SOFTWARE_END -->
 
 <!-- SYNERGY_START -->
 ## Hardware Synergy
