@@ -1,56 +1,149 @@
-<!-- OVERVIEW_START -->
-> **4x SPST + 4x Latching-DPDT - IoTextra Relay**
->
-> 4 SPST relays · 4 latching DPDT relays · state retained without coil power · LED state indication on all 8 channels
->
-> SPST contacts 250 VAC / 30 VDC / 5 A, direct GPIO control · latching contacts 250 VAC / 220 VDC / 2 A, control via I²C → TCA9534 → DRV8837C
->
-> Works with Raspberry Pi, Raspberry Pi Pico / Pico 2 (RP2040 / RP2350) and ESP32
->
-> DIN-rail mounting: A 3D-printable DIN-rail mounting tray is available — <a href="https://www.printables.com/model/1802141-din-rail-mount-for-make-things-happy-iotextra">view on Printables</a>
->
-> Part of the IoTextra series · compatible with IoTsmart and IoTbase · <a href="https://github.com/makethingshappy/iotextra-digital/tree/main/Relay">Open Hardware</a>
->
-> Hardware license: <a href="https://github.com/makethingshappy/iotextra-digital/blob/main/LICENSE_HARDWARE.md">CC BY-SA 4.0</a>
-<!-- OVERVIEW_END -->
+# IoTextra-Digital: Industrial Digital I/O Modules for MQTT & Node-RED Automation
 
-<!-- docs-sync:badges -->
-[![Tasmota](https://img.shields.io/badge/Tasmota-d4680a)](#software)
+## Overview
 
-<!-- PRODUCT_START -->
-## Buy IoTextra Relay
+[**IoTextra-Digital**](https://makethingshappy.io/collections/digital-iotextra) is a family of isolated digital I/O modules designed for reliable operation in IoT, IIoT, and smart home environments.  
+Each module combines digital inputs with relay, solid-state relay, transistor, or MOSFET outputs — the exact configuration, voltage range, and isolation technology vary by module and are documented in its own datasheet.
 
-[IoTextra Relay at makethingshappy.io](https://makethingshappy.io/products/iotextra-relay)
-<!-- PRODUCT_END -->
+IoTextra modules integrate cleanly with IoTsmart MCU boards and can be used with MQTT and Node-RED workflows (e.g., via the IoTflow automation framework).
 
-<!-- SOFTWARE_START -->
-## Software
+---
 
-![Tasmota](https://img.shields.io/badge/Tasmota-d4680a)
-- [IoTextra Relay Tasmota template for IoTsmart ESP32-S3](https://github.com/makethingshappy/IoThome/blob/main/Tasmota_Templates/IoTsmart_ESP32-S3.md#iotextra-relay)
-- [IoTextra Relay Tasmota template for IoTsmart XIAO + XIAO ESP32-S3](https://github.com/makethingshappy/IoThome/blob/main/Tasmota_Templates/IoTsmart_XIAO_XIAO-ESP32-S3.md#iotextra-relay)
-- [IoTextra Relay Tasmota template for IoTbase NANO + Waveshare ESP32-S3-NANO](https://github.com/makethingshappy/IoThome/blob/main/Tasmota_Templates/IoTbase_Nano.md#iotextra-relay)
-<!-- SOFTWARE_END -->
+## Features & Capabilities
 
-<!-- SYNERGY_START -->
-## Hardware Synergy
+- Industrial-grade digital I/O, galvanically isolated per channel
+- Relay, solid-state relay, transistor, or MOSFET outputs depending on the module
+- Clean terminal block layout for fast, error-free wiring
+- Compatible with IoTsmart modules, Raspberry Pi PICO, and other MCUs
+- Suitable for long-term installations in smart buildings, labs, and light industrial systems
 
-🔌 **Standalone:** Connect via the HOST connector cable from any host microcontroller: SPST relay control (AP0–AP3), the latching-driver enable signal (AP5) and the 5V supply are provided through HOST. Latching relays are controlled via the I²C bus (Qwiic connectors or SDA / SCL pins) using the onboard I/O expander.
+---
 
-🧠 **Smart:** An IoTsmart module is inserted into the HOST connector. Relay control, the latching-driver enable signal and the 5V module supply are provided through HOST, powered from the IoTsmart module.
+## Hardware Specifications
 
-🏗 **Mezzanine:** The module is installed into an IoTbase carrier board. Relay control, the latching-driver enable signal and the 5V module supply are provided through HOST.<br>
-*Exception: SKU 040201302201, 040201302101 can be installed only with a spacer (Height Extender) or via a cable connection.*
-<!-- SYNERGY_END -->
+Each IoTextra-Digital module has its own electrical and mechanical specifications, documented inside its versioned folder.
 
-![latching](latching.svg)
+Module folders:
 
-## SKU
+- **[Input](./Input/)**
+- **[MOSFET2](./MOSFET2/)**
+- **[Octal](./Octal/)**
+- **[Octal2](./Octal2/)**
+- **[Octal3](./Octal3/)**
+- **[Octal4](./Octal4/)**
+- **[Relay](./Relay/)**
+- **[Relay2](./Relay2/)**
+- **[SSR Small](./SSR%20Small/)**
 
-See [SKU.md](SKU.md)
+Typical documentation includes:
 
-## Version history
+- Maximum input voltage and isolation rating (varies by module — see individual datasheet)
+- Output type and ratings (relay, SSR, transistor, or MOSFET)
+- Electrical thresholds and isolation design
+- Load and protection characteristics
+- Mechanical layout and terminal labeling
 
-| Version | Notes |
-|---|---|
-| 3.02 | Initial GitHub release |
+Refer to each module's documentation for exact technical data.
+
+---
+
+## Digital I/O Channel Configuration
+
+Documentation includes:
+
+- Input and output channel numbering
+- Terminal block identification
+- Wiring patterns for switches, sensors, and loads
+- Recommended safety and polarity guidelines
+
+> **Important:**  
+> Output type differs by module — NPN transistor outputs (Octal2), MOSFET outputs (MOSFET2), and relay or solid-state relay outputs (all other modules). Check the specific module's datasheet before wiring.
+
+---
+
+## Wiring & Pinout Diagrams
+
+Module-level wiring diagrams include:
+
+- Terminal block layout  
+- Polarity and signal direction  
+- Relay/SSR/transistor/MOSFET load wiring examples  
+- Safety considerations for higher-voltage operation  
+
+See the diagrams located in each module's folder listed above.
+
+---
+
+## Software Support
+
+IoTextra-Digital is a **hardware-only** series, but integrates cleanly into automation stacks.
+
+Typical usage includes:
+
+- Connecting module inputs/outputs to IoTsmart or Raspberry Pi PICO boards  
+- Reading/writing digital I/O via GPIO or MCU firmware  
+- Triggering MQTT events or Node-RED flows  
+- Following IoTflow's MQTT topic conventions for automation
+
+### Software options
+
+The same hardware works with three software paths:
+
+- **[IoTflow](https://github.com/makethingshappy/IoTflow)** — MicroPython firmware, MQTT and Node-RED automation
+- **[MTH for Tasmota](https://github.com/makethingshappy/IoThome)** (formerly IoThome) — Tasmota templates and Berry drivers for ESP32-based boards
+- **[MTH for ESPHome](https://github.com/makethingshappy/MTH-for-ESPHome)** — ready-to-flash ESPHome configurations for ESP32-based boards
+
+Which carrier boards and IoTextra modules are supported by which software is shown in the [compatibility tables](https://github.com/makethingshappy#readme).
+
+---
+
+## Examples
+
+IoTextra-Digital modules are used together with [**IoTsmart**](https://makethingshappy.io/collections/iotsmart) or [**IoTbase**](https://makethingshappy.io/collections/iotbase) boards and [**IoTflow-based**](https://makethingshappy.io/pages/iotflow) automation.
+
+Module-specific diagrams and connection examples are included inside each module's folder listed above.
+
+### MCU Firmware Examples (IoTsmart)
+
+IoTsmart does **not** yet contain its own `/examples` folder.  
+Firmware reference examples will be added in a future update.
+
+### Node-RED Automation Examples (IoTflow)
+
+👉 **IoTflow Node-RED Examples**  
+https://github.com/makethingshappy/IoTflow/tree/main/Node-RED%20Examples
+
+---
+
+## Ordering Information
+
+### 📦 SKU Information  
+The complete list of SKUs is provided in the following PDF located in the repository root:
+
+- **SKU Digital IoTextra.pdf**
+
+---
+
+### 🛒 Purchase Links  
+Order directly from the official store:
+
+* [**IoTextra Input Module**](https://makethingshappy.io/products/iotextra-input)
+* [**IoTextra MOSFET2 Module**](https://makethingshappy.io/products/iotextra-mosfet2)
+* [**IoTextra Octal Module**](https://makethingshappy.io/products/iotextra-octal)
+* [**IoTextra Octal2 Module**](https://makethingshappy.io/products/iotextra-octal2)
+* [**IoTextra Octal3 Module**](https://makethingshappy.io/products/iotextra-octal3)
+* [**IoTextra Octal4 Module**](https://makethingshappy.io/products/iotextra-octal4)
+* [**IoTextra Relay Module**](https://makethingshappy.io/products/iotextra-relay)
+* [**IoTextra Relay2 Module**](https://makethingshappy.io/products/iotextra-relay2)
+* [**IoTextra SSR Small Module**](https://makethingshappy.io/products/iotextra-ssr-small)
+
+---
+
+## Licensing
+
+This repository uses separate licenses for each category of assets:
+
+- **Code:** [`LICENSE_CODE.md`](./LICENSE_CODE.md) — MIT License  
+- **Schematics & Documentation:** [`LICENSE_HARDWARE.md`](./LICENSE_HARDWARE.md) — CC BY-SA 4.0  
+- **Documentation:** [`LICENSE_DOCS.md`](./LICENSE_DOCS.md)  
+- **Media:** [`LICENSE_MEDIA.md`](./LICENSE_MEDIA.md)
