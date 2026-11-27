@@ -133,6 +133,7 @@ Order directly from the official store:
 * [**IoTextra Octal2 Module**](https://makethingshappy.io/products/iotextra-octal2)
 * [**IoTextra Octal3 Module**](https://makethingshappy.io/products/iotextra-octal3)
 * [**IoTextra Octal4 Module**](https://makethingshappy.io/products/iotextra-octal4)
+* [**IoTextra Relay Module**](https://makethingshappy.io/products/iotextra-relay)
 * [**IoTextra Relay2 Module**](https://makethingshappy.io/products/iotextra-relay2)
 * [**IoTextra SSR Small Module**](https://makethingshappy.io/products/iotextra-ssr-small)
 
