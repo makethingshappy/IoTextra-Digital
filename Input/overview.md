@@ -1,6 +1,6 @@
 # 8x DI - IoTextra Input
 
-8-channel digital input module · galvanic isolation · 3750V RMS · TVS protection
+8-channel digital input module · individual channel isolation · 3750 Vrms · TVS protection
 
 Max input voltage 36 VDC · GPIO and/or I²C modes · HOST and Qwiic connectors · 47×56 mm · 5 VDC supply
 
