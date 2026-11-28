@@ -53,7 +53,7 @@
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-0d7ab5)
 - [IoTextra MOSFET2 ESPHome config for IoTsmart ESP32-S3](https://github.com/makethingshappy/MTH-for-ESPHome/blob/main/Configs/IoTsmart_ESP32-S3/iotextra-mosfet2-v3-02-iotsmart-esp32s3-v2-01-gpio.yaml)
-- [IoTextra MOSFET2 ESPHome config for IoTsmart XIAO + XIAO ESP32-S3](https://github.com/makethingshappy/MTH-for-ESPHome/blob/main/Configs/IoTsmart_XIAO_XIAO-ESP32-S3/iotextra-mosfet2-v3-02-iotsmart-xiao-v1-02-xiao-esp32s3-gpio.yaml)
+- [IoTextra MOSFET2 ESPHome config for IoTsmart XIAO + XIAO ESP32-S3](https://github.com/makethingshappy/MTH-for-ESPHome/blob/main/Configs/IoTsmart_XIAO_XIAO-ESP32-S3/iotextra-mosfet2-v3-02-iotsmart-xiao-v2-01-xiao-esp32s3-gpio.yaml)
 - [IoTextra MOSFET2 ESPHome config for IoTbase PICO + Raspberry Pi Pico W](https://github.com/makethingshappy/MTH-for-ESPHome/blob/main/Configs/IoTbase_PICO_Raspberry-Pi-Pico-W/iotextra-mosfet2-v3-02-iotbase-pico-v3-05-pico-w-gpio.yaml)
 - [IoTextra MOSFET2 ESPHome config for IoTbase NANO + Waveshare ESP32-S3-NANO](https://github.com/makethingshappy/MTH-for-ESPHome/blob/main/Configs/IoTbase_NANO_Waveshare-ESP32-S3-NANO/iotextra-mosfet2-v3-02-iotbase-nano-v3-06-ws-esp32s3-nano-gpio.yaml)
 <!-- SOFTWARE_END -->
